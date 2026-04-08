@@ -129,6 +129,7 @@ export default function Home() {
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</a>
             <a href="#generator" className="hover:text-foreground transition-colors">Generator</a>
             <a href="#roadmap" className="hover:text-foreground transition-colors">Roadmap</a>
+            <a href="#creator" className="hover:text-foreground transition-colors">Creator</a>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
             <a
@@ -352,6 +353,64 @@ export default function Home() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Creator Section */}
+        <section id="creator" className="py-12 sm:py-16 md:py-20 lg:py-28 bg-muted/30">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8 sm:mb-12">
+              <Badge variant="secondary" className="mb-4">Meet the Creator</Badge>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+                Built by a passionate engineer
+              </h2>
+            </div>
+            <div className="mx-auto max-w-2xl">
+              <Card className="overflow-hidden">
+                <CardContent className="p-8 sm:p-12">
+                  <div className="flex flex-col items-center text-center space-y-6">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-2xl" />
+                      <img
+                        src="https://github.com/NotHarshhaa.png"
+                        alt="Harshhaa"
+                        className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-primary/20 shadow-lg"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl sm:text-3xl font-bold tracking-wider">
+                        H A R S H H A A
+                      </h3>
+                      <p className="text-sm sm:text-base text-muted-foreground max-w-lg leading-relaxed">
+                        Development Platform & Automation Enthusiast | Cloud, DevOps & MLops Engineer | Platform Engineering
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+                      <a
+                        href="https://github.com/NotHarshhaa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="default" className="gap-2">
+                          <IconBrandGithub className="h-4 w-4" />
+                          Follow on GitHub
+                        </Button>
+                      </a>
+                      <a
+                        href="https://github.com/NotHarshhaa/pipeline-forge"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button variant="outline" className="gap-2">
+                          <IconStar className="h-4 w-4" />
+                          Star this Project
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
