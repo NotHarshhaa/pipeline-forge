@@ -115,12 +115,12 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <IconBrandNodejs className="h-5 w-5" />
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <IconBrandNodejs className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <span className="text-lg font-bold tracking-tight">
+            <span className="text-base sm:text-lg font-bold tracking-tight">
               Pipeline Forge
             </span>
           </div>
@@ -130,7 +130,7 @@ export default function Home() {
             <a href="#generator" className="hover:text-foreground transition-colors">Generator</a>
             <a href="#roadmap" className="hover:text-foreground transition-colors">Roadmap</a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <a
               href="https://github.com/NotHarshhaa/pipeline-forge"
               target="_blank"
@@ -155,23 +155,23 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 md:py-32 text-center">
-            <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm font-medium">
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-20 md:py-32 text-center">
+            <Badge variant="secondary" className="mb-4 sm:mb-6 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">
               Open Source CI/CD Pipeline Generator
             </Badge>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
               Generate Production-Ready
               <br />
               <span className="text-primary">CI/CD Pipelines</span>
               <br />
               in Seconds
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground leading-relaxed">
+            <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed px-2">
               Pipeline Forge is a developer-first tool that helps you create
               optimized, secure, and scalable CI/CD pipelines for modern
               applications — without writing YAML from scratch.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <a href="#generator">
                 <Button size="lg" className="gap-2 text-base font-semibold px-8">
                   <IconBolt className="h-5 w-5" />
@@ -187,7 +187,7 @@ export default function Home() {
             </div>
 
             {/* Example output preview */}
-            <div className="mt-16 mx-auto max-w-2xl">
+            <div className="mt-8 sm:mt-12 md:mt-16 mx-auto max-w-2xl px-2">
               <div className="rounded-xl border bg-card shadow-lg overflow-hidden">
                 <div className="flex items-center gap-2 border-b bg-muted/50 px-4 py-3">
                   <div className="flex gap-1.5">
@@ -199,7 +199,7 @@ export default function Home() {
                     .github/workflows/ci.yml
                   </span>
                 </div>
-                <pre className="p-4 text-left text-sm font-mono text-foreground/80 overflow-auto max-h-64 leading-relaxed">
+                <pre className="p-3 sm:p-4 text-left text-xs sm:text-sm font-mono text-foreground/80 overflow-auto max-h-48 sm:max-h-64 leading-relaxed">
                   <code>{exampleYaml}</code>
                 </pre>
               </div>
@@ -208,18 +208,18 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-20 md:py-28 bg-muted/30">
+        <section id="features" className="py-12 sm:py-16 md:py-20 lg:py-28 bg-muted/30">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-8 sm:mb-12 md:mb-16">
               <Badge variant="secondary" className="mb-4">Features</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
                 Everything you need for CI/CD
               </h2>
-              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 Built with best practices so you can ship faster and safer.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {features.map((feature) => {
                 const Icon = feature.icon;
                 return (
@@ -227,12 +227,12 @@ export default function Home() {
                     key={feature.title}
                     className="group hover:shadow-md transition-all hover:border-primary/30"
                   >
-                    <CardContent className="p-6">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mb-4 group-hover:bg-primary/20 transition-colors">
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mb-3 sm:mb-4 group-hover:bg-primary/20 transition-colors">
                         <Icon className="h-5 w-5" />
                       </div>
-                      <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                      <h3 className="font-semibold text-base sm:text-lg mb-1.5 sm:mb-2">{feature.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                         {feature.description}
                       </p>
                     </CardContent>
@@ -244,28 +244,28 @@ export default function Home() {
         </section>
 
         {/* How It Works */}
-        <section id="how-it-works" className="py-20 md:py-28">
+        <section id="how-it-works" className="py-12 sm:py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-8 sm:mb-12 md:mb-16">
               <Badge variant="secondary" className="mb-4">How It Works</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
                 Four simple steps
               </h2>
-              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 From zero to a production-ready pipeline in under a minute.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               {steps.map((step, i) => (
                 <div key={step.number} className="relative text-center">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground text-xl font-bold mb-4">
+                  <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground text-lg sm:text-xl font-bold mb-3 sm:mb-4">
                     {step.number}
                   </div>
                   {i < steps.length - 1 && (
                     <div className="hidden lg:block absolute top-7 left-[60%] w-[80%] border-t-2 border-dashed border-primary/20" />
                   )}
-                  <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.description}</p>
+                  <h3 className="font-semibold text-base sm:text-lg mb-1.5 sm:mb-2">{step.title}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{step.description}</p>
                 </div>
               ))}
             </div>
@@ -273,14 +273,14 @@ export default function Home() {
         </section>
 
         {/* Generator Section */}
-        <section id="generator" className="py-20 md:py-28 bg-muted/30">
+        <section id="generator" className="py-12 sm:py-16 md:py-20 lg:py-28 bg-muted/30">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
+            <div className="text-center mb-8 sm:mb-12">
               <Badge variant="secondary" className="mb-4">Generator</Badge>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
                 Build your pipeline
               </h2>
-              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 Configure your project settings and generate optimized CI/CD YAML instantly.
               </p>
             </div>
@@ -289,15 +289,15 @@ export default function Home() {
         </section>
 
         {/* Tech Stack Section */}
-        <section className="py-20 md:py-28">
+        <section className="py-12 sm:py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-8 sm:mb-12 md:mb-16">
               <Badge variant="secondary" className="mb-4">Tech Stack</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
                 Built with modern tools
               </h2>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-3xl mx-auto">
               {[
                 { icon: IconBrandNextjs, label: "Next.js" },
                 { icon: IconBrandTailwind, label: "Tailwind CSS" },
@@ -308,10 +308,10 @@ export default function Home() {
                 return (
                   <div
                     key={tech.label}
-                    className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center"
+                    className="flex flex-col items-center gap-2 sm:gap-3 rounded-xl border bg-card p-4 sm:p-6 text-center"
                   >
-                    <Icon className="h-8 w-8 text-primary" />
-                    <span className="font-medium text-sm">{tech.label}</span>
+                    <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                    <span className="font-medium text-xs sm:text-sm">{tech.label}</span>
                   </div>
                 );
               })}
@@ -320,29 +320,29 @@ export default function Home() {
         </section>
 
         {/* Roadmap */}
-        <section id="roadmap" className="py-20 md:py-28 bg-muted/30">
+        <section id="roadmap" className="py-12 sm:py-16 md:py-20 lg:py-28 bg-muted/30">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
+            <div className="text-center mb-8 sm:mb-12 md:mb-16">
               <Badge variant="secondary" className="mb-4">Roadmap</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
                 What&apos;s coming next
               </h2>
-              <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 We&apos;re constantly improving Pipeline Forge.
               </p>
             </div>
-            <div className="max-w-xl mx-auto space-y-4">
+            <div className="max-w-xl mx-auto space-y-3 sm:space-y-4">
               {roadmap.map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-3 rounded-lg border bg-card p-4"
+                  className="flex items-center gap-2.5 sm:gap-3 rounded-lg border bg-card p-3 sm:p-4"
                 >
                   {item.done ? (
-                    <IconCircleCheck className="h-5 w-5 text-green-500 shrink-0" />
+                    <IconCircleCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 shrink-0" />
                   ) : (
-                    <IconCircleDashed className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <IconCircleDashed className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
                   )}
-                  <span className={`text-sm font-medium ${item.done ? "line-through text-muted-foreground" : ""}`}>
+                  <span className={`text-xs sm:text-sm font-medium ${item.done ? "line-through text-muted-foreground" : ""}`}>
                     {item.label}
                   </span>
                   {!item.done && (
@@ -357,13 +357,13 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-28">
+        <section className="py-12 sm:py-16 md:py-20 lg:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
             <div className="mx-auto max-w-2xl">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 sm:mb-4 px-2">
                 Ready to simplify your DevOps?
               </h2>
-              <p className="text-lg text-muted-foreground mb-8">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground mb-6 sm:mb-8 px-2">
                 Stop writing YAML from scratch. Generate production-ready
                 pipelines in seconds.
               </p>
@@ -392,19 +392,19 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
                 <IconBrandNodejs className="h-4 w-4" />
               </div>
               <span className="font-bold">Pipeline Forge</span>
             </div>
-            <p className="text-sm text-muted-foreground flex items-center gap-1">
+            <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 text-center">
               Built with <IconHeart className="h-3.5 w-3.5 text-primary" /> to
               simplify DevOps workflows
             </p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               <span>MIT License</span>
               <Separator orientation="vertical" className="h-4" />
               <a
