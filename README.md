@@ -16,7 +16,10 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
 * 🧩 **Multi-Stack Support** — Node.js, Python, Java, Go, Rust, and .NET
 * 🔄 **Multiple CI Providers**:
   * GitHub Actions ✅
-  * GitLab CI (coming soon)
+  * GitLab CI ✅
+  * Jenkins ✅
+  * CircleCI ✅
+  * Azure Pipelines ✅
 * 🐳 **Built-in Docker Support** — Docker build and push configurations
 * ☁️ **Deployment-Ready** — AWS ECS and Kubernetes deployment configs
 * 🔐 **Security Best Practices** — Security scanning and audit steps included
@@ -33,7 +36,7 @@ Visit the live site: **[Pipeline Forge](http://localhost:3000)** (when running l
 ## 🧠 **How It Works**
 
 1. **Select your project type** (Node.js, Python, Java, Go, Rust, .NET)
-2. **Choose your CI/CD provider** (GitHub Actions or GitLab CI)
+2. **Choose your CI/CD provider** (GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines)
 3. **Configure build, test, and deploy steps** (linting, tests, Docker, deployment)
 4. **Generate your pipeline YAML instantly** (copy or download)
 
@@ -142,12 +145,17 @@ jobs:
 
 ## 🛣️ **Roadmap**
 
-* [ ] GitLab CI support
-* [ ] Jenkins pipeline generation
-* [ ] Kubernetes deployment templates
+* [x] GitLab CI support
+* [x] Jenkins pipeline generation
+* [x] CircleCI support
+* [x] Azure Pipelines support
+* [ ] Travis CI support
+* [ ] Bitbucket Pipelines support
+* [ ] Kubernetes deployment templates (advanced)
 * [ ] AI-powered pipeline optimization
 * [ ] Pipeline visualization (graph view)
 * [ ] Cost estimation per pipeline
+* [ ] Template customization and export
 
 ---
 

@@ -35,6 +35,9 @@ import {
   IconSparkles,
   IconCode,
   IconBrandJavascript,
+  IconServer,
+  IconRefresh,
+  IconCloud,
 } from "@tabler/icons-react";
 import { generatePipeline, type PipelineConfig } from "@/lib/generate-pipeline";
 
@@ -49,7 +52,10 @@ const projectTypes = [
 
 const ciProviders = [
   { value: "github-actions", label: "GitHub Actions", icon: IconBrandGithub },
-  { value: "gitlab-ci", label: "GitLab CI", icon: IconBrandGitlab, badge: "Coming Soon" },
+  { value: "gitlab-ci", label: "GitLab CI", icon: IconBrandGitlab },
+  { value: "jenkins", label: "Jenkins", icon: IconServer },
+  { value: "circleci", label: "CircleCI", icon: IconRefresh },
+  { value: "azure-pipelines", label: "Azure Pipelines", icon: IconCloud },
 ] as const;
 
 const deployTargets = [
@@ -89,10 +95,14 @@ export function PipelineGenerator() {
   }, [output]);
 
   const handleDownload = useCallback(() => {
-    const filename =
-      config.ciProvider === "github-actions"
-        ? "ci-pipeline.yml"
-        : ".gitlab-ci.yml";
+    const filenameMap: Record<PipelineConfig["ciProvider"], string> = {
+      "github-actions": ".github/workflows/ci.yml",
+      "gitlab-ci": ".gitlab-ci.yml",
+      "jenkins": "Jenkinsfile",
+      "circleci": ".circleci/config.yml",
+      "azure-pipelines": "azure-pipelines.yml",
+    };
+    const filename = filenameMap[config.ciProvider] || "pipeline.yml";
     const blob = new Blob([output], { type: "text/yaml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -170,7 +180,7 @@ export function PipelineGenerator() {
             <CardDescription className="text-xs sm:text-sm">Choose your pipeline platform</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {ciProviders.map((provider) => {
                 const Icon = provider.icon;
                 const isSelected = config.ciProvider === provider.value;
@@ -183,19 +193,14 @@ export function PipelineGenerator() {
                         provider.value as PipelineConfig["ciProvider"]
                       )
                     }
-                    className={`relative flex items-center gap-2 sm:gap-3 rounded-lg border-2 p-3 sm:p-4 text-xs sm:text-sm font-medium transition-all hover:bg-accent/50 ${
+                    className={`relative flex flex-col items-center gap-1.5 sm:gap-2 rounded-lg border-2 p-2.5 sm:p-3 text-xs sm:text-sm font-medium transition-all hover:bg-accent/50 ${
                       isSelected
                         ? "border-primary bg-primary/5 text-primary"
                         : "border-border text-muted-foreground"
                     }`}
                   >
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                    {provider.label}
-                    {"badge" in provider && (
-                      <Badge variant="secondary" className="absolute -top-2 right-2 text-[10px] px-1.5 py-0">
-                        {provider.badge}
-                      </Badge>
-                    )}
+                    <span className="text-center leading-tight">{provider.label}</span>
                   </button>
                 );
               })}
@@ -328,9 +333,16 @@ export function PipelineGenerator() {
               <div className="min-w-0 flex-1">
                 <CardTitle className="text-base sm:text-lg">Generated Pipeline</CardTitle>
                 <CardDescription className="text-xs sm:text-sm truncate">
-                  {config.ciProvider === "github-actions"
-                    ? ".github/workflows/ci.yml"
-                    : ".gitlab-ci.yml"}
+                  {(() => {
+                    const filenameMap: Record<PipelineConfig["ciProvider"], string> = {
+                      "github-actions": ".github/workflows/ci.yml",
+                      "gitlab-ci": ".gitlab-ci.yml",
+                      "jenkins": "Jenkinsfile",
+                      "circleci": ".circleci/config.yml",
+                      "azure-pipelines": "azure-pipelines.yml",
+                    };
+                    return filenameMap[config.ciProvider] || "pipeline.yml";
+                  })()}
                 </CardDescription>
               </div>
               {output && (

@@ -43,7 +43,7 @@ const features = [
   {
     icon: IconRefresh,
     title: "Multiple CI Providers",
-    description: "GitHub Actions supported. GitLab CI coming soon.",
+    description: "GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines.",
   },
   {
     icon: IconBrandDocker,
@@ -71,7 +71,7 @@ const steps = [
   {
     number: "02",
     title: "Pick your CI provider",
-    description: "GitHub Actions or GitLab CI (coming soon).",
+    description: "GitHub Actions, GitLab CI, Jenkins, CircleCI, or Azure Pipelines.",
   },
   {
     number: "03",
@@ -86,9 +86,13 @@ const steps = [
 ];
 
 const roadmap = [
-  { label: "GitLab CI support", done: false },
-  { label: "Jenkins pipeline generation", done: false },
-  { label: "Kubernetes deployment templates", done: false },
+  { label: "GitLab CI support", done: true },
+  { label: "Jenkins pipeline generation", done: true },
+  { label: "CircleCI support", done: true },
+  { label: "Azure Pipelines support", done: true },
+  { label: "Travis CI support", done: false },
+  { label: "Bitbucket Pipelines support", done: false },
+  { label: "Kubernetes deployment templates (advanced)", done: false },
   { label: "AI-powered pipeline optimization", done: false },
   { label: "Pipeline visualization (graph view)", done: false },
   { label: "Cost estimation per pipeline", done: false },
