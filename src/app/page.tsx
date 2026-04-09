@@ -21,6 +21,9 @@ import {
   IconBrandNodejs,
   IconMenu2,
   IconX,
+  IconSettings,
+  IconTerminal,
+  IconBell,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +62,21 @@ const features = [
     icon: IconShieldLock,
     title: "Security Best Practices",
     description: "Security scanning and audit steps built in.",
+  },
+  {
+    icon: IconSettings,
+    title: "Environment Variables",
+    description: "Add custom environment variables to your pipelines easily.",
+  },
+  {
+    icon: IconTerminal,
+    title: "Custom Scripts",
+    description: "Insert pre-build, pre-test, and post-build custom commands.",
+  },
+  {
+    icon: IconBell,
+    title: "Smart Notifications",
+    description: "Slack and email notifications for pipeline status updates.",
   },
 ];
 

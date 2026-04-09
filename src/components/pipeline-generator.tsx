@@ -20,6 +20,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   IconBrandNodejs,
   IconBrandPython,
@@ -38,6 +40,14 @@ import {
   IconServer,
   IconRefresh,
   IconCloud,
+  IconPlus,
+  IconTrash,
+  IconSettings,
+  IconChevronDown,
+  IconChevronUp,
+  IconBell,
+  IconVariable,
+  IconTerminal,
 } from "@tabler/icons-react";
 import { generatePipeline, type PipelineConfig } from "@/lib/generate-pipeline";
 
@@ -79,9 +89,17 @@ export function PipelineGenerator() {
     branches: ["main"],
     enableCaching: true,
     enableSecurityScan: false,
+    environmentVariables: [],
+    customScripts: {},
+    notifications: {
+      enabled: false,
+      slack: { enabled: false },
+      email: { enabled: false },
+    },
   });
   const [output, setOutput] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleGenerate = useCallback(() => {
     const yaml = generatePipeline(config);
@@ -312,6 +330,255 @@ export function PipelineGenerator() {
               </Select>
             </div>
           </CardContent>
+        </Card>
+
+        {/* Advanced Features */}
+        <Card>
+          <CardHeader className="pb-3 sm:pb-4">
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center justify-between w-full text-left group"
+            >
+              <div>
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                  <IconSettings className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Advanced Features
+                  <Badge variant="secondary" className="text-[10px] sm:text-xs">New</Badge>
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm mt-1">
+                  Environment variables, custom scripts, and notifications
+                </CardDescription>
+              </div>
+              {showAdvanced ? (
+                <IconChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <IconChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
+          </CardHeader>
+          
+          {showAdvanced && (
+            <CardContent className="space-y-4 sm:space-y-5">
+              {/* Environment Variables */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <IconVariable className="h-4 w-4" />
+                    Environment Variables
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const newVars = [...(config.environmentVariables || []), { key: "", value: "" }];
+                      updateConfig("environmentVariables", newVars);
+                    }}
+                    className="h-7 text-xs gap-1"
+                  >
+                    <IconPlus className="h-3 w-3" />
+                    Add
+                  </Button>
+                </div>
+                {config.environmentVariables && config.environmentVariables.length > 0 ? (
+                  <div className="space-y-2">
+                    {config.environmentVariables.map((env, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          placeholder="KEY"
+                          value={env.key}
+                          onChange={(e) => {
+                            const newVars = [...config.environmentVariables!];
+                            newVars[index].key = e.target.value;
+                            updateConfig("environmentVariables", newVars);
+                          }}
+                          className="flex-1 h-8 text-xs"
+                        />
+                        <Input
+                          placeholder="value"
+                          value={env.value}
+                          onChange={(e) => {
+                            const newVars = [...config.environmentVariables!];
+                            newVars[index].value = e.target.value;
+                            updateConfig("environmentVariables", newVars);
+                          }}
+                          className="flex-1 h-8 text-xs"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const newVars = config.environmentVariables!.filter((_, i) => i !== index);
+                            updateConfig("environmentVariables", newVars);
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <IconTrash className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No environment variables added</p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Custom Scripts */}
+              <div className="space-y-2 sm:space-y-3">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <IconTerminal className="h-4 w-4" />
+                  Custom Scripts
+                </Label>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Pre-Build Script</Label>
+                    <Textarea
+                      placeholder="Commands to run before build (e.g., echo 'Starting build')"
+                      value={config.customScripts?.preBuild || ""}
+                      onChange={(e) =>
+                        updateConfig("customScripts", {
+                          ...config.customScripts,
+                          preBuild: e.target.value,
+                        })
+                      }
+                      className="text-xs font-mono min-h-[60px]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Pre-Test Script</Label>
+                    <Textarea
+                      placeholder="Commands to run before tests (e.g., npm run db:seed)"
+                      value={config.customScripts?.preTest || ""}
+                      onChange={(e) =>
+                        updateConfig("customScripts", {
+                          ...config.customScripts,
+                          preTest: e.target.value,
+                        })
+                      }
+                      className="text-xs font-mono min-h-[60px]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Post-Build Script</Label>
+                    <Textarea
+                      placeholder="Commands to run after build (e.g., npm run analyze)"
+                      value={config.customScripts?.postBuild || ""}
+                      onChange={(e) =>
+                        updateConfig("customScripts", {
+                          ...config.customScripts,
+                          postBuild: e.target.value,
+                        })
+                      }
+                      className="text-xs font-mono min-h-[60px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Notifications */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="notifications"
+                    checked={config.notifications?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("notifications", {
+                        ...config.notifications!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="notifications" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconBell className="h-4 w-4" />
+                    Enable Notifications
+                  </Label>
+                </div>
+
+                {config.notifications?.enabled && (
+                  <div className="ml-6 space-y-3 pt-2">
+                    {/* Slack */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="slack"
+                          checked={config.notifications?.slack?.enabled}
+                          onCheckedChange={(checked) =>
+                            updateConfig("notifications", {
+                              ...config.notifications!,
+                              slack: {
+                                ...config.notifications!.slack,
+                                enabled: checked as boolean,
+                              },
+                            })
+                          }
+                        />
+                        <Label htmlFor="slack" className="text-xs cursor-pointer">
+                          Slack Notifications
+                        </Label>
+                      </div>
+                      {config.notifications?.slack?.enabled && (
+                        <Input
+                          placeholder="Slack webhook URL"
+                          value={config.notifications?.slack?.webhookUrl || ""}
+                          onChange={(e) =>
+                            updateConfig("notifications", {
+                              ...config.notifications!,
+                              slack: {
+                                ...config.notifications!.slack!,
+                                webhookUrl: e.target.value,
+                              },
+                            })
+                          }
+                          className="text-xs h-8"
+                        />
+                      )}
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="email"
+                          checked={config.notifications?.email?.enabled}
+                          onCheckedChange={(checked) =>
+                            updateConfig("notifications", {
+                              ...config.notifications!,
+                              email: {
+                                ...config.notifications!.email,
+                                enabled: checked as boolean,
+                              },
+                            })
+                          }
+                        />
+                        <Label htmlFor="email" className="text-xs cursor-pointer">
+                          Email Notifications
+                        </Label>
+                      </div>
+                      {config.notifications?.email?.enabled && (
+                        <Input
+                          placeholder="Email addresses (comma-separated)"
+                          value={config.notifications?.email?.recipients || ""}
+                          onChange={(e) =>
+                            updateConfig("notifications", {
+                              ...config.notifications!,
+                              email: {
+                                ...config.notifications!.email!,
+                                recipients: e.target.value,
+                              },
+                            })
+                          }
+                          className="text-xs h-8"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         {/* Generate Button */}

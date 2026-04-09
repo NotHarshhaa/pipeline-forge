@@ -16,6 +16,24 @@ export interface PipelineConfig {
   branches: string[];
   enableCaching: boolean;
   enableSecurityScan: boolean;
+  // New features
+  environmentVariables?: Array<{ key: string; value: string }>;
+  customScripts?: {
+    preBuild?: string;
+    postBuild?: string;
+    preTest?: string;
+  };
+  notifications?: {
+    enabled: boolean;
+    slack?: {
+      enabled: boolean;
+      webhookUrl?: string;
+    };
+    email?: {
+      enabled: boolean;
+      recipients?: string;
+    };
+  };
 }
 
 export const defaults: Record<string, Partial<PipelineConfig>> = {

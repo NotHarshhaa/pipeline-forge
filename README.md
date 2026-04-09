@@ -24,6 +24,9 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
 * ☁️ **Deployment-Ready** — AWS ECS and Kubernetes deployment configs
 * 🔐 **Security Best Practices** — Security scanning and audit steps included
 * 📄 **Clean YAML Output** — Copy or download your pipeline instantly
+* ⚙️ **Environment Variables** — Add custom env vars to your pipelines
+* 🔧 **Custom Scripts** — Insert pre-build, pre-test, and post-build commands
+* 🔔 **Smart Notifications** — Slack and email notifications for pipeline status
 
 ---
 
@@ -38,7 +41,31 @@ Visit the live site: **[Pipeline Forge](http://localhost:3000)** (when running l
 1. **Select your project type** (Node.js, Python, Java, Go, Rust, .NET)
 2. **Choose your CI/CD provider** (GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines)
 3. **Configure build, test, and deploy steps** (linting, tests, Docker, deployment)
-4. **Generate your pipeline YAML instantly** (copy or download)
+4. **Add advanced features** (environment variables, custom scripts, notifications)
+5. **Generate your pipeline YAML instantly** (copy or download)
+
+---
+
+## 🚀 **Advanced Features**
+
+### Environment Variables ⚙️
+Add custom environment variables to your pipeline configuration. Perfect for:
+- API keys and secrets (use CI provider's secret management)
+- Feature flags
+- Configuration values
+- Environment-specific settings
+
+### Custom Scripts 🔧
+Insert custom commands at specific points in your pipeline:
+- **Pre-Build Script**: Runs before build (e.g., code generation)
+- **Pre-Test Script**: Runs before tests (e.g., database seeding)
+- **Post-Build Script**: Runs after build (e.g., bundle analysis)
+
+### Smart Notifications 🔔
+Configure Slack and/or Email notifications for pipeline status updates:
+- **Slack**: Via webhook URL integration
+- **Email**: Via CI provider's email notification system
+- Get alerts on build success/failure
 
 ---
 
@@ -149,6 +176,9 @@ jobs:
 * [x] Jenkins pipeline generation
 * [x] CircleCI support
 * [x] Azure Pipelines support
+* [x] Environment variables configuration
+* [x] Custom scripts support
+* [x] Notification settings (Slack/Email)
 * [ ] Travis CI support
 * [ ] Bitbucket Pipelines support
 * [ ] Kubernetes deployment templates (advanced)
