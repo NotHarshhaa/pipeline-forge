@@ -30,6 +30,9 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
 * 🔀 **Matrix Builds** — Test across multiple versions simultaneously with parallel jobs
 * 📦 **Artifact Management** — Upload and store build artifacts with configurable retention
 * ⏰ **Scheduled Pipelines** — Run pipelines on a schedule with cron expressions
+* 📊 **Code Quality & Coverage** — Set coverage thresholds and quality gates
+* 🚀 **Performance Testing** — Load testing and performance benchmarks
+* 🗄️ **Database & Services** — Configure PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch
 
 ---
 
@@ -87,6 +90,25 @@ Run pipelines automatically on a schedule:
 - **Cron Expressions**: Use standard cron syntax (e.g., `0 2 * * *` for daily at 2 AM)
 - **Timezone Support**: Configure timezone for accurate scheduling
 - **Automated Testing**: Run nightly builds, weekly security scans, etc.
+
+### Code Quality & Coverage 📊
+Enforce code quality standards in your pipeline:
+- **Coverage Threshold**: Set minimum code coverage percentage (e.g., 80%)
+- **Quality Gate**: Fail builds that don't meet coverage requirements
+- **Automated Checks**: Ensure code quality before deployment
+
+### Performance Testing 🚀
+Test your application's performance automatically:
+- **Load Testing**: Run stress tests to check application limits
+- **Performance Benchmarks**: Track performance metrics over time
+- **Regression Detection**: Catch performance degradation early
+
+### Database & Services 🗄️
+Configure service dependencies for your pipeline:
+- **Database Support**: PostgreSQL, MySQL, MongoDB, Redis
+- **Migrations**: Automatically run database migrations
+- **Service Containers**: Redis cache, Elasticsearch for testing
+- **Integration Testing**: Test with real service dependencies
 
 ---
 

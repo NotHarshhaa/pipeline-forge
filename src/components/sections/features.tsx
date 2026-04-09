@@ -11,6 +11,9 @@ import {
   IconGitBranch,
   IconPackage,
   IconClock,
+  IconChartBar,
+  IconRocket,
+  IconDatabase,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,6 +78,21 @@ const features = [
     icon: IconClock,
     title: "Scheduled Pipelines",
     description: "Run pipelines on a schedule with cron expressions.",
+  },
+  {
+    icon: IconChartBar,
+    title: "Code Quality & Coverage",
+    description: "Set coverage thresholds and quality gates for your code.",
+  },
+  {
+    icon: IconRocket,
+    title: "Performance Testing",
+    description: "Load testing and performance benchmarks for your application.",
+  },
+  {
+    icon: IconDatabase,
+    title: "Database & Services",
+    description: "Configure databases, Redis, and Elasticsearch services.",
   },
 ];
 

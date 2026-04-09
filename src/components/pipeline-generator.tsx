@@ -51,6 +51,9 @@ import {
   IconGitBranch,
   IconPackage,
   IconClock,
+  IconChartBar,
+  IconRocket,
+  IconDatabase,
 } from "@tabler/icons-react";
 import { generatePipeline, type PipelineConfig } from "@/lib/generate-pipeline";
 
@@ -112,6 +115,26 @@ export function PipelineGenerator() {
       enabled: false,
       cron: "",
       timezone: "UTC",
+    },
+    codeQuality: {
+      enabled: false,
+      coverageThreshold: 80,
+      qualityGate: false,
+    },
+    performance: {
+      enabled: false,
+      loadTesting: false,
+      benchmarks: false,
+    },
+    services: {
+      enabled: false,
+      database: {
+        enabled: false,
+        type: "postgresql",
+        migrations: false,
+      },
+      redis: false,
+      elasticsearch: false,
     },
   });
   const [output, setOutput] = useState<string>("");
@@ -757,6 +780,242 @@ export function PipelineGenerator() {
                           <SelectItem value="Asia/Kolkata">Asia/Kolkata</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Code Quality & Coverage */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="codeQuality"
+                    checked={config.codeQuality?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("codeQuality", {
+                        ...config.codeQuality!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="codeQuality" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconChartBar className="h-4 w-4" />
+                    Code Quality & Coverage
+                  </Label>
+                </div>
+                {config.codeQuality?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Coverage threshold (%)
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder="80"
+                        min="0"
+                        max="100"
+                        value={config.codeQuality?.coverageThreshold || 80}
+                        onChange={(e) =>
+                          updateConfig("codeQuality", {
+                            ...config.codeQuality!,
+                            coverageThreshold: parseInt(e.target.value) || 80,
+                          })
+                        }
+                        className="text-xs h-8"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="qualityGate"
+                        checked={config.codeQuality?.qualityGate}
+                        onCheckedChange={(checked) =>
+                          updateConfig("codeQuality", {
+                            ...config.codeQuality!,
+                            qualityGate: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="qualityGate" className="text-xs cursor-pointer">
+                        Enable quality gate (fail on low coverage)
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Performance Testing */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="performance"
+                    checked={config.performance?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("performance", {
+                        ...config.performance!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="performance" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconRocket className="h-4 w-4" />
+                    Performance Testing
+                  </Label>
+                </div>
+                {config.performance?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="loadTesting"
+                        checked={config.performance?.loadTesting}
+                        onCheckedChange={(checked) =>
+                          updateConfig("performance", {
+                            ...config.performance!,
+                            loadTesting: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="loadTesting" className="text-xs cursor-pointer">
+                        Load testing (stress tests)
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="benchmarks"
+                        checked={config.performance?.benchmarks}
+                        onCheckedChange={(checked) =>
+                          updateConfig("performance", {
+                            ...config.performance!,
+                            benchmarks: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="benchmarks" className="text-xs cursor-pointer">
+                        Performance benchmarks
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Database & Services */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="services"
+                    checked={config.services?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("services", {
+                        ...config.services!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="services" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconDatabase className="h-4 w-4" />
+                    Database & Services
+                  </Label>
+                </div>
+                {config.services?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="database"
+                          checked={config.services?.database?.enabled}
+                          onCheckedChange={(checked) =>
+                            updateConfig("services", {
+                              ...config.services!,
+                              database: {
+                                ...config.services!.database!,
+                                enabled: checked as boolean,
+                              },
+                            })
+                          }
+                        />
+                        <Label htmlFor="database" className="text-xs cursor-pointer">
+                          Database
+                        </Label>
+                      </div>
+                      {config.services?.database?.enabled && (
+                        <div className="ml-6 space-y-2">
+                          <Select
+                            value={config.services?.database?.type || "postgresql"}
+                            onValueChange={(value) =>
+                              updateConfig("services", {
+                                ...config.services!,
+                                database: {
+                                  ...config.services!.database!,
+                                  type: value,
+                                },
+                              })
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="postgresql">PostgreSQL</SelectItem>
+                              <SelectItem value="mysql">MySQL</SelectItem>
+                              <SelectItem value="mongodb">MongoDB</SelectItem>
+                              <SelectItem value="redis">Redis</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id="migrations"
+                              checked={config.services?.database?.migrations}
+                              onCheckedChange={(checked) =>
+                                updateConfig("services", {
+                                  ...config.services!,
+                                  database: {
+                                    ...config.services!.database!,
+                                    migrations: checked as boolean,
+                                  },
+                                })
+                              }
+                            />
+                            <Label htmlFor="migrations" className="text-xs cursor-pointer">
+                              Run migrations
+                            </Label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="redis"
+                        checked={config.services?.redis}
+                        onCheckedChange={(checked) =>
+                          updateConfig("services", {
+                            ...config.services!,
+                            redis: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="redis" className="text-xs cursor-pointer">
+                        Redis cache
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="elasticsearch"
+                        checked={config.services?.elasticsearch}
+                        onCheckedChange={(checked) =>
+                          updateConfig("services", {
+                            ...config.services!,
+                            elasticsearch: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="elasticsearch" className="text-xs cursor-pointer">
+                        Elasticsearch
+                      </Label>
                     </div>
                   </div>
                 )}

@@ -49,6 +49,27 @@ export interface PipelineConfig {
     cron?: string;
     timezone?: string;
   };
+  // More advanced features
+  codeQuality?: {
+    enabled: boolean;
+    coverageThreshold?: number;
+    qualityGate?: boolean;
+  };
+  performance?: {
+    enabled: boolean;
+    loadTesting?: boolean;
+    benchmarks?: boolean;
+  };
+  services?: {
+    enabled: boolean;
+    database?: {
+      enabled: boolean;
+      type?: string;
+      migrations?: boolean;
+    };
+    redis?: boolean;
+    elasticsearch?: boolean;
+  };
 }
 
 export const defaults: Record<string, Partial<PipelineConfig>> = {
