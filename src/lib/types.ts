@@ -34,6 +34,21 @@ export interface PipelineConfig {
       recipients?: string;
     };
   };
+  // Additional new features
+  matrixBuild?: {
+    enabled: boolean;
+    versions?: string[];
+  };
+  artifacts?: {
+    enabled: boolean;
+    paths?: string[];
+    retention?: number;
+  };
+  schedule?: {
+    enabled: boolean;
+    cron?: string;
+    timezone?: string;
+  };
 }
 
 export const defaults: Record<string, Partial<PipelineConfig>> = {

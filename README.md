@@ -27,6 +27,9 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
 * ⚙️ **Environment Variables** — Add custom env vars to your pipelines
 * 🔧 **Custom Scripts** — Insert pre-build, pre-test, and post-build commands
 * 🔔 **Smart Notifications** — Slack and email notifications for pipeline status
+* 🔀 **Matrix Builds** — Test across multiple versions simultaneously with parallel jobs
+* 📦 **Artifact Management** — Upload and store build artifacts with configurable retention
+* ⏰ **Scheduled Pipelines** — Run pipelines on a schedule with cron expressions
 
 ---
 
@@ -66,6 +69,24 @@ Configure Slack and/or Email notifications for pipeline status updates:
 - **Slack**: Via webhook URL integration
 - **Email**: Via CI provider's email notification system
 - Get alerts on build success/failure
+
+### Matrix Builds 🔀
+Test your application across multiple versions simultaneously:
+- **Parallel Testing**: Run tests on multiple Node.js, Python, or Java versions
+- **Version Matrix**: Specify versions like 18, 20, 22 for comprehensive testing
+- **Faster Feedback**: Catch version-specific issues early
+
+### Artifact Management 📦
+Upload and store build artifacts with full control:
+- **Custom Paths**: Specify which files/folders to upload (dist/, build/, *.zip)
+- **Retention Policy**: Configure how long artifacts are stored (default: 30 days)
+- **Download Artifacts**: Access build outputs from previous runs
+
+### Scheduled Pipelines ⏰
+Run pipelines automatically on a schedule:
+- **Cron Expressions**: Use standard cron syntax (e.g., `0 2 * * *` for daily at 2 AM)
+- **Timezone Support**: Configure timezone for accurate scheduling
+- **Automated Testing**: Run nightly builds, weekly security scans, etc.
 
 ---
 

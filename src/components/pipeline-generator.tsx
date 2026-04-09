@@ -48,6 +48,9 @@ import {
   IconBell,
   IconVariable,
   IconTerminal,
+  IconGitBranch,
+  IconPackage,
+  IconClock,
 } from "@tabler/icons-react";
 import { generatePipeline, type PipelineConfig } from "@/lib/generate-pipeline";
 
@@ -95,6 +98,20 @@ export function PipelineGenerator() {
       enabled: false,
       slack: { enabled: false },
       email: { enabled: false },
+    },
+    matrixBuild: {
+      enabled: false,
+      versions: [],
+    },
+    artifacts: {
+      enabled: false,
+      paths: [],
+      retention: 30,
+    },
+    schedule: {
+      enabled: false,
+      cron: "",
+      timezone: "UTC",
     },
   });
   const [output, setOutput] = useState<string>("");
@@ -573,6 +590,173 @@ export function PipelineGenerator() {
                           className="text-xs h-8"
                         />
                       )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Matrix Build */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="matrixBuild"
+                    checked={config.matrixBuild?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("matrixBuild", {
+                        ...config.matrixBuild!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="matrixBuild" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconGitBranch className="h-4 w-4" />
+                    Matrix Build (Multi-Version Testing)
+                  </Label>
+                </div>
+                {config.matrixBuild?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <Label className="text-xs text-muted-foreground">
+                      Test versions (comma-separated, e.g., 18, 20, 22)
+                    </Label>
+                    <Input
+                      placeholder="18, 20, 22"
+                      value={config.matrixBuild?.versions?.join(", ") || ""}
+                      onChange={(e) => {
+                        const versions = e.target.value.split(",").map((v) => v.trim()).filter(Boolean);
+                        updateConfig("matrixBuild", {
+                          ...config.matrixBuild!,
+                          versions,
+                        });
+                      }}
+                      className="text-xs h-8"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Artifacts */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="artifacts"
+                    checked={config.artifacts?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("artifacts", {
+                        ...config.artifacts!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="artifacts" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconPackage className="h-4 w-4" />
+                    Artifact Management
+                  </Label>
+                </div>
+                {config.artifacts?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Artifact paths (comma-separated)
+                      </Label>
+                      <Input
+                        placeholder="dist/, build/, *.zip"
+                        value={config.artifacts?.paths?.join(", ") || ""}
+                        onChange={(e) => {
+                          const paths = e.target.value.split(",").map((p) => p.trim()).filter(Boolean);
+                          updateConfig("artifacts", {
+                            ...config.artifacts!,
+                            paths,
+                          });
+                        }}
+                        className="text-xs h-8"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Retention days
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder="30"
+                        value={config.artifacts?.retention || 30}
+                        onChange={(e) =>
+                          updateConfig("artifacts", {
+                            ...config.artifacts!,
+                            retention: parseInt(e.target.value) || 30,
+                          })
+                        }
+                        className="text-xs h-8"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Schedule */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="schedule"
+                    checked={config.schedule?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("schedule", {
+                        ...config.schedule!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="schedule" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconClock className="h-4 w-4" />
+                    Scheduled Pipelines
+                  </Label>
+                </div>
+                {config.schedule?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">
+                        Cron expression (e.g., 0 2 * * *)
+                      </Label>
+                      <Input
+                        placeholder="0 2 * * * (daily at 2 AM)"
+                        value={config.schedule?.cron || ""}
+                        onChange={(e) =>
+                          updateConfig("schedule", {
+                            ...config.schedule!,
+                            cron: e.target.value,
+                          })
+                        }
+                        className="text-xs h-8 font-mono"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Timezone</Label>
+                      <Select
+                        value={config.schedule?.timezone || "UTC"}
+                        onValueChange={(value) =>
+                          updateConfig("schedule", {
+                            ...config.schedule!,
+                            timezone: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="UTC">UTC</SelectItem>
+                          <SelectItem value="America/New_York">America/New_York</SelectItem>
+                          <SelectItem value="America/Los_Angeles">America/Los_Angeles</SelectItem>
+                          <SelectItem value="Europe/London">Europe/London</SelectItem>
+                          <SelectItem value="Asia/Tokyo">Asia/Tokyo</SelectItem>
+                          <SelectItem value="Asia/Kolkata">Asia/Kolkata</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 )}

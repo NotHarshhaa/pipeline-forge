@@ -8,6 +8,9 @@ import {
   IconSettings,
   IconTerminal,
   IconBell,
+  IconGitBranch,
+  IconPackage,
+  IconClock,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -57,6 +60,21 @@ const features = [
     icon: IconBell,
     title: "Smart Notifications",
     description: "Slack and email notifications for pipeline status updates.",
+  },
+  {
+    icon: IconGitBranch,
+    title: "Matrix Builds",
+    description: "Test across multiple versions simultaneously with parallel jobs.",
+  },
+  {
+    icon: IconPackage,
+    title: "Artifact Management",
+    description: "Upload and store build artifacts with configurable retention.",
+  },
+  {
+    icon: IconClock,
+    title: "Scheduled Pipelines",
+    description: "Run pipelines on a schedule with cron expressions.",
   },
 ];
 
