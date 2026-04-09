@@ -98,7 +98,12 @@ const roadmap = [
   { label: "Cost estimation per pipeline", done: false },
 ];
 
-const exampleYaml = `name: CI Pipeline
+const examplePipelines = [
+  {
+    id: "github-actions",
+    label: "GitHub Actions",
+    filename: ".github/workflows/ci.yml",
+    code: `name: CI Pipeline
 
 on:
   push:
@@ -118,10 +123,122 @@ jobs:
 
       - run: npm ci
       - run: npm test
-      - run: npm run build`;
+      - run: npm run build`,
+  },
+  {
+    id: "gitlab-ci",
+    label: "GitLab CI",
+    filename: ".gitlab-ci.yml",
+    code: `stages:
+  - build
+  - test
+
+variables:
+  NODE_VERSION: "20"
+
+image: node:20-alpine
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+
+test:
+  stage: test
+  script:
+    - npm ci
+    - npm test`,
+  },
+  {
+    id: "jenkins",
+    label: "Jenkins",
+    filename: "Jenkinsfile",
+    code: `pipeline {
+  agent any
+
+  tools {
+    nodejs 'NodeJS 20'
+  }
+
+  stages {
+    stage('Install') {
+      steps {
+        sh 'npm ci'
+      }
+    }
+
+    stage('Test') {
+      steps {
+        sh 'npm test'
+      }
+    }
+
+    stage('Build') {
+      steps {
+        sh 'npm run build'
+      }
+    }
+  }
+}`,
+  },
+  {
+    id: "circleci",
+    label: "CircleCI",
+    filename: ".circleci/config.yml",
+    code: `version: 2.1
+
+orbs:
+  node: circleci/node@5.2
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/node:20.0
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          name: Run tests
+          command: npm test
+      - run:
+          name: Build
+          command: npm run build
+
+workflows:
+  build-test:
+    jobs:
+      - build-and-test`,
+  },
+  {
+    id: "azure-pipelines",
+    label: "Azure Pipelines",
+    filename: "azure-pipelines.yml",
+    code: `trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20'
+
+  - script: npm ci
+    displayName: 'Install dependencies'
+
+  - script: npm test
+    displayName: 'Run tests'
+
+  - script: npm run build
+    displayName: 'Build'`,
+  },
+];
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedPipeline, setSelectedPipeline] = useState(0);
 
   const navLinks = [
     { href: "#features", label: "Features" },
@@ -265,21 +382,41 @@ export default function Home() {
               </a>
             </div>
 
-            {/* Example output preview */}
-            <div className="mt-8 sm:mt-12 md:mt-16 mx-auto max-w-2xl px-2">
+            {/* Example output preview with tabs */}
+            <div className="mt-8 sm:mt-12 md:mt-16 mx-auto max-w-3xl px-2">
               <div className="rounded-xl border bg-card shadow-lg overflow-hidden">
-                <div className="flex items-center gap-2 border-b bg-muted/50 px-4 py-3">
-                  <div className="flex gap-1.5">
-                    <div className="h-3 w-3 rounded-full bg-red-400" />
-                    <div className="h-3 w-3 rounded-full bg-yellow-400" />
-                    <div className="h-3 w-3 rounded-full bg-green-400" />
+                {/* Terminal header with tabs */}
+                <div className="border-b bg-muted/50">
+                  <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50">
+                    <div className="flex gap-1.5">
+                      <div className="h-3 w-3 rounded-full bg-red-400" />
+                      <div className="h-3 w-3 rounded-full bg-yellow-400" />
+                      <div className="h-3 w-3 rounded-full bg-green-400" />
+                    </div>
+                    <span className="ml-2 text-xs text-muted-foreground font-mono">
+                      {examplePipelines[selectedPipeline].filename}
+                    </span>
                   </div>
-                  <span className="ml-2 text-xs text-muted-foreground font-mono">
-                    .github/workflows/ci.yml
-                  </span>
+                  {/* Tabs */}
+                  <div className="flex gap-1 px-2 py-1.5 overflow-x-auto scrollbar-hide">
+                    {examplePipelines.map((pipeline, index) => (
+                      <button
+                        key={pipeline.id}
+                        onClick={() => setSelectedPipeline(index)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
+                          selectedPipeline === index
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                        }`}
+                      >
+                        {pipeline.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <pre className="p-3 sm:p-4 text-left text-xs sm:text-sm font-mono text-foreground/80 overflow-auto max-h-48 sm:max-h-64 leading-relaxed">
-                  <code>{exampleYaml}</code>
+                {/* Code display */}
+                <pre className="p-3 sm:p-4 text-left text-xs sm:text-sm font-mono text-foreground/80 overflow-auto max-h-64 sm:max-h-80 md:max-h-96 leading-relaxed">
+                  <code>{examplePipelines[selectedPipeline].code}</code>
                 </pre>
               </div>
             </div>
