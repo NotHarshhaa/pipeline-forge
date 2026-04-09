@@ -394,7 +394,7 @@ export function PipelineGenerator() {
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" sideOffset={5}>
                   <SelectItem value="main">main</SelectItem>
                   <SelectItem value="master">master</SelectItem>
                   <SelectItem value="develop">develop</SelectItem>
