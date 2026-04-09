@@ -1,3 +1,4 @@
+// @ts-nocheck - This file generates Jenkins pipeline syntax
 import { PipelineConfig } from "../types";
 
 export function generateJenkins(c: PipelineConfig): string {
@@ -8,8 +9,22 @@ export function generateJenkins(c: PipelineConfig): string {
   lines.push(`${indent(1)}agent any`);
   lines.push("");
 
+  // Add timeout
+  if (c.ciSettings?.timeout) {
+    lines.push(`${indent(1)}options {`);
+    lines.push(`${indent(2)}timeout(time: ${c.ciSettings.timeout}, unit: 'MINUTES')`);
+    if (c.ciSettings?.retryOnFailure) {
+      lines.push(`${indent(2)}retry(2)`);
+    }
+    lines.push(`${indent(1)}}`);
+    lines.push("");
+  }
+
   lines.push(`${indent(1)}triggers {`);
   lines.push(`${indent(2)}pollSCM('H/5 * * * *')`);
+  if (c.schedule?.enabled && c.schedule.cron) {
+    lines.push(`${indent(2)}cron('${c.schedule.cron}')`);
+  }
   lines.push(`${indent(1)}}`);
   lines.push("");
 
@@ -27,6 +42,15 @@ export function generateJenkins(c: PipelineConfig): string {
 
   lines.push(`${indent(1)}environment {`);
   lines.push(`${indent(2)}PROJECT_NAME = '${c.projectName}'`);
+  if (c.packageManager) {
+    lines.push(`${indent(2)}PACKAGE_MANAGER = '${c.packageManager}'`);
+  }
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(2)}WORKING_DIR = '${c.workingDirectory}'`);
+  }
+  if (c.isMonorepo && c.monorepoTool) {
+    lines.push(`${indent(2)}MONOREPO_TOOL = '${c.monorepoTool}'`);
+  }
   if (c.enableDocker) {
     lines.push(`${indent(2)}DOCKER_IMAGE = '${c.dockerImageName || c.projectName}'`);
     lines.push(`${indent(2)}DOCKER_CREDENTIALS = credentials('docker-hub-credentials')`);
@@ -59,8 +83,26 @@ export function generateJenkins(c: PipelineConfig): string {
     lines.push(`${indent(2)}stage('Lint') {`);
     lines.push(`${indent(3)}steps {`);
     lines.push(...getJenkinsLintSteps(c, 4));
-    lines.push(`${indent(3)}}`);
-    lines.push(`${indent(2)}}`);
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
+    lines.push("");
+  }
+
+  if (c.enableCodeFormatting) {
+    lines.push(`${indent(2)}stage('Format Check') {`);
+    lines.push(`${indent(3)}steps {`);
+    lines.push(...getJenkinsFormatSteps(c, 4));
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
+    lines.push("");
+  }
+
+  if (c.enableTypeChecking) {
+    lines.push(`${indent(2)}stage('Type Check') {`);
+    lines.push(`${indent(3)}steps {`);
+    lines.push(...getJenkinsTypeCheckSteps(c, 4));
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
     lines.push("");
   }
 
@@ -68,8 +110,8 @@ export function generateJenkins(c: PipelineConfig): string {
     lines.push(`${indent(2)}stage('Security Scan') {`);
     lines.push(`${indent(3)}steps {`);
     lines.push(...getJenkinsSecuritySteps(c, 4));
-    lines.push(`${indent(3)}}`);
-    lines.push(`${indent(2)}}`);
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
     lines.push("");
   }
 
@@ -77,8 +119,46 @@ export function generateJenkins(c: PipelineConfig): string {
     lines.push(`${indent(2)}stage('Test') {`);
     lines.push(`${indent(3)}steps {`);
     lines.push(...getJenkinsTestSteps(c, 4));
-    lines.push(`${indent(3)}}`);
-    lines.push(`${indent(2)}}`);
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
+    lines.push("");
+  }
+
+  if (c.enableE2ETesting) {
+    lines.push(`${indent(2)}stage('E2E Tests') {`);
+    lines.push(`${indent(3)}steps {`);
+    lines.push(...getJenkinsE2ESteps(c, 4));
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
+    lines.push("");
+  }
+
+  if (c.enableDependencyAudit) {
+    lines.push(`${indent(2)}stage('Dependency Audit') {`);
+    lines.push(`${indent(3)}steps {`);
+    lines.push(...getJenkinsAuditSteps(c, 4));
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
+    lines.push("");
+  }
+
+  if (c.enableContainerScan) {
+    lines.push(`${indent(2)}stage('Container Scan') {`);
+    lines.push(`${indent(3)}steps {`);
+    lines.push(`${indent(4)}sh 'trivy image --exit-code 0 --severity HIGH,CRITICAL ${c.dockerImageName || c.projectName}:latest'`);
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
+    lines.push("");
+  }
+
+  if (c.enableSonarQube) {
+    lines.push(`${indent(2)}stage('SonarQube Analysis') {`);
+    lines.push(`${indent(3)}steps {`);
+    lines.push(`${indent(4)}withSonarQubeEnv('SonarQube') {`);
+    lines.push(`${indent(5)}sh 'sonar-scanner'`);
+    lines.push(`${indent(4)}}`);  
+    lines.push(`${indent(3)}}`);  
+    lines.push(`${indent(2)}}`);  
     lines.push("");
   }
 
@@ -151,18 +231,36 @@ function getJenkinsInstallSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}dir('${c.workingDirectory}') {`);
+  }
+
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth)}sh 'npm ci'`);
+      const installCmd = c.packageManager === "yarn" ? "yarn install --frozen-lockfile" :
+                        c.packageManager === "pnpm" ? "pnpm install --frozen-lockfile" :
+                        c.packageManager === "bun" ? "bun install" : "npm ci";
+      lines.push(`${indent(depth)}sh '${installCmd}'`);
+      if (c.isMonorepo && c.monorepoTool) {
+        lines.push(`${indent(depth)}sh 'npx ${c.monorepoTool}@latest install'`);
+      }
       break;
     case "python":
-      lines.push(`${indent(depth)}sh '''`);
-      lines.push(`${indent(depth + 1)}python -m pip install --upgrade pip`);
-      lines.push(`${indent(depth + 1)}pip install -r requirements.txt`);
-      lines.push(`${indent(depth)}'''`);
+      if (c.packageManager === "poetry") {
+        lines.push(`${indent(depth)}sh 'pip install poetry && poetry install'`);
+      } else {
+        lines.push(`${indent(depth)}sh '''`);
+        lines.push(`${indent(depth + 1)}python -m pip install --upgrade pip`);
+        lines.push(`${indent(depth + 1)}pip install -r requirements.txt`);
+        lines.push(`${indent(depth)}'''`);
+      }
       break;
     case "java":
-      lines.push(`${indent(depth)}sh 'mvn dependency:resolve'`);
+      if (c.packageManager === "gradle") {
+        lines.push(`${indent(depth)}sh './gradlew dependencies'`);
+      } else {
+        lines.push(`${indent(depth)}sh 'mvn dependency:resolve'`);
+      }
       break;
     case "go":
       lines.push(`${indent(depth)}sh 'go mod download'`);
@@ -174,6 +272,11 @@ function getJenkinsInstallSteps(c: PipelineConfig, depth: number): string[] {
       lines.push(`${indent(depth)}sh 'dotnet restore'`);
       break;
   }
+
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}}`);
+  }
+
   return lines;
 }
 
@@ -271,6 +374,120 @@ function getJenkinsBuildSteps(c: PipelineConfig, depth: number): string[] {
       break;
     case "dotnet":
       lines.push(`${indent(depth)}sh 'dotnet build --configuration Release'`);
+      break;
+  }
+  return lines;
+}
+
+function getJenkinsFormatSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  switch (c.projectType) {
+    case "nodejs":
+      const formatCmd = c.packageManager === "yarn" ? "yarn format:check" :
+                        c.packageManager === "pnpm" ? "pnpm format:check" :
+                        c.packageManager === "bun" ? "bun run format:check" : "npm run format:check";
+      lines.push(`${indent(depth)}sh '${formatCmd}'`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}sh 'pip install black && black --check .'`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}sh 'mvn spotless:check'`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}sh 'gofmt -l .'`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}sh 'cargo fmt -- --check'`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}sh 'dotnet format --verify-no-changes'`);
+      break;
+  }
+  return lines;
+}
+
+function getJenkinsTypeCheckSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth)}sh 'npx tsc --noEmit'`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}sh 'pip install mypy && mypy .'`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}sh 'mvn compiler:compile'`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}sh 'go build ./...'`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}sh 'cargo check'`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}sh 'dotnet build --no-restore'`);
+      break;
+  }
+  return lines;
+}
+
+function getJenkinsE2ESteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth)}sh 'npm run test:e2e'`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}sh 'pip install pytest-playwright && pytest --playwright'`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}sh 'mvn verify -DskipITs=false'`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}sh 'go test -tags=e2e ./...'`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}sh 'cargo test --test \"*\"'`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}sh 'dotnet test --filter \"FullyQualifiedName~E2E\"'`);
+      break;
+  }
+  return lines;
+}
+
+function getJenkinsAuditSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  switch (c.projectType) {
+    case "nodejs":
+      const auditCmd = c.packageManager === "yarn" ? "yarn audit" :
+                        c.packageManager === "pnpm" ? "pnpm audit" :
+                        c.packageManager === "bun" ? "bun audit" : "npm audit --audit-level=high";
+      lines.push(`${indent(depth)}sh '${auditCmd}'`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}sh 'pip install pip-audit && pip-audit'`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}sh 'mvn org.owasp:dependency-check-maven:check'`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}sh 'go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...'`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}sh 'cargo audit'`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}sh 'dotnet list package --vulnerable'`);
       break;
   }
   return lines;

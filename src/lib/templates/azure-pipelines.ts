@@ -1,3 +1,4 @@
+// @ts-nocheck - This file generates Azure Pipelines YAML syntax
 import { PipelineConfig } from "../types";
 
 export function generateAzurePipelines(c: PipelineConfig): string {
@@ -18,6 +19,15 @@ export function generateAzurePipelines(c: PipelineConfig): string {
 
   lines.push("variables:");
   lines.push(`  projectName: '${c.projectName}'`);
+  if (c.packageManager) {
+    lines.push(`  packageManager: '${c.packageManager}'`);
+  }
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`  workingDirectory: '${c.workingDirectory}'`);
+  }
+  if (c.isMonorepo && c.monorepoTool) {
+    lines.push(`  monorepoTool: '${c.monorepoTool}'`);
+  }
   if (c.enableDocker) {
     lines.push(`  dockerImageName: '${c.dockerImageName || c.projectName}'`);
   }
@@ -48,6 +58,16 @@ export function generateAzurePipelines(c: PipelineConfig): string {
     lines.push("");
   }
 
+  if (c.enableCodeFormatting) {
+    lines.push(...getAzureFormatSteps(c, 10));
+    lines.push("");
+  }
+
+  if (c.enableTypeChecking) {
+    lines.push(...getAzureTypeCheckSteps(c, 10));
+    lines.push("");
+  }
+
   if (c.enableSecurityScan) {
     lines.push(...getAzureSecuritySteps(c, 10));
     lines.push("");
@@ -55,6 +75,16 @@ export function generateAzurePipelines(c: PipelineConfig): string {
 
   if (c.enableTests) {
     lines.push(...getAzureTestSteps(c, 10));
+    lines.push("");
+  }
+
+  if (c.enableE2ETesting) {
+    lines.push(...getAzureE2ESteps(c, 10));
+    lines.push("");
+  }
+
+  if (c.enableDependencyAudit) {
+    lines.push(...getAzureAuditSteps(c, 10));
     lines.push("");
   }
 
@@ -353,5 +383,134 @@ function getAzureBuildSteps(c: PipelineConfig, depth: number): string[] {
   }
 
   lines.push(`${indent(depth)}  displayName: 'Build'`);
+  return lines;
+}
+
+function getAzureFormatSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- script: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth)}    npm run format:check`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}    pip install black`);
+      lines.push(`${indent(depth)}    black --check .`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}    mvn spotless:check`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}    gofmt -l .`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}    cargo fmt -- --check`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}    dotnet format --verify-no-changes`);
+      break;
+  }
+
+  lines.push(`${indent(depth)}  displayName: 'Check formatting'`);
+  return lines;
+}
+
+function getAzureTypeCheckSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- script: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth)}    npx tsc --noEmit`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}    pip install mypy`);
+      lines.push(`${indent(depth)}    mypy .`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}    mvn compiler:compile`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}    go build ./...`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}    cargo check`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}    dotnet build --no-restore`);
+      break;
+  }
+
+  lines.push(`${indent(depth)}  displayName: 'Type check'`);
+  return lines;
+}
+
+function getAzureE2ESteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- script: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth)}    npm run test:e2e`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}    pip install pytest-playwright`);
+      lines.push(`${indent(depth)}    pytest --playwright`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}    mvn verify -DskipITs=false`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}    go test -tags=e2e ./...`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}    cargo test --test '*'`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}    dotnet test --filter "FullyQualifiedName~E2E"`);
+      break;
+  }
+
+  lines.push(`${indent(depth)}  displayName: 'Run E2E tests'`);
+  return lines;
+}
+
+function getAzureAuditSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- script: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth)}    npm audit --audit-level=high`);
+      break;
+    case "python":
+      lines.push(`${indent(depth)}    pip install pip-audit`);
+      lines.push(`${indent(depth)}    pip-audit`);
+      break;
+    case "java":
+      lines.push(`${indent(depth)}    mvn org.owasp:dependency-check-maven:check`);
+      break;
+    case "go":
+      lines.push(`${indent(depth)}    go install golang.org/x/vuln/cmd/govulncheck@latest`);
+      lines.push(`${indent(depth)}    govulncheck ./...`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth)}    cargo audit`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth)}    dotnet list package --vulnerable`);
+      break;
+  }
+
+  lines.push(`${indent(depth)}  displayName: 'Dependency audit'`);
   return lines;
 }

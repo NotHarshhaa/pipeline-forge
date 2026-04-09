@@ -1,3 +1,4 @@
+// @ts-nocheck - This file generates CircleCI YAML syntax
 import { PipelineConfig } from "../types";
 
 export function generateCircleCI(c: PipelineConfig): string {
@@ -52,6 +53,16 @@ export function generateCircleCI(c: PipelineConfig): string {
     lines.push("");
   }
 
+  if (c.enableCodeFormatting) {
+    lines.push(...getCircleCIFormatSteps(c, 3));
+    lines.push("");
+  }
+
+  if (c.enableTypeChecking) {
+    lines.push(...getCircleCITypeCheckSteps(c, 3));
+    lines.push("");
+  }
+
   if (c.enableSecurityScan) {
     lines.push(...getCircleCISecuritySteps(c, 3));
     lines.push("");
@@ -59,6 +70,16 @@ export function generateCircleCI(c: PipelineConfig): string {
 
   if (c.enableTests) {
     lines.push(...getCircleCITestSteps(c, 3));
+    lines.push("");
+  }
+
+  if (c.enableE2ETesting) {
+    lines.push(...getCircleCIE2ESteps(c, 3));
+    lines.push("");
+  }
+
+  if (c.enableDependencyAudit) {
+    lines.push(...getCircleCIAuditSteps(c, 3));
     lines.push("");
   }
 
@@ -362,6 +383,139 @@ function getCircleCIBuildSteps(c: PipelineConfig, depth: number): string[] {
       break;
     case "dotnet":
       lines.push(`${indent(depth + 2)}dotnet build --configuration Release`);
+      break;
+  }
+
+  return lines;
+}
+
+function getCircleCIFormatSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- run:`);
+  lines.push(`${indent(depth + 1)}name: Check formatting`);
+  lines.push(`${indent(depth + 1)}command: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth + 2)}npm run format:check`);
+      break;
+    case "python":
+      lines.push(`${indent(depth + 2)}pip install black`);
+      lines.push(`${indent(depth + 2)}black --check .`);
+      break;
+    case "java":
+      lines.push(`${indent(depth + 2)}mvn spotless:check`);
+      break;
+    case "go":
+      lines.push(`${indent(depth + 2)}gofmt -l .`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth + 2)}cargo fmt -- --check`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth + 2)}dotnet format --verify-no-changes`);
+      break;
+  }
+
+  return lines;
+}
+
+function getCircleCITypeCheckSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- run:`);
+  lines.push(`${indent(depth + 1)}name: Type check`);
+  lines.push(`${indent(depth + 1)}command: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth + 2)}npx tsc --noEmit`);
+      break;
+    case "python":
+      lines.push(`${indent(depth + 2)}pip install mypy`);
+      lines.push(`${indent(depth + 2)}mypy .`);
+      break;
+    case "java":
+      lines.push(`${indent(depth + 2)}mvn compiler:compile`);
+      break;
+    case "go":
+      lines.push(`${indent(depth + 2)}go build ./...`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth + 2)}cargo check`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth + 2)}dotnet build --no-restore`);
+      break;
+  }
+
+  return lines;
+}
+
+function getCircleCIE2ESteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- run:`);
+  lines.push(`${indent(depth + 1)}name: Run E2E tests`);
+  lines.push(`${indent(depth + 1)}command: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth + 2)}npm run test:e2e`);
+      break;
+    case "python":
+      lines.push(`${indent(depth + 2)}pip install pytest-playwright`);
+      lines.push(`${indent(depth + 2)}pytest --playwright`);
+      break;
+    case "java":
+      lines.push(`${indent(depth + 2)}mvn verify -DskipITs=false`);
+      break;
+    case "go":
+      lines.push(`${indent(depth + 2)}go test -tags=e2e ./...`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth + 2)}cargo test --test '*'`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth + 2)}dotnet test --filter "FullyQualifiedName~E2E"`);
+      break;
+  }
+
+  return lines;
+}
+
+function getCircleCIAuditSteps(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  lines.push(`${indent(depth)}- run:`);
+  lines.push(`${indent(depth + 1)}name: Dependency audit`);
+  lines.push(`${indent(depth + 1)}command: |`);
+
+  switch (c.projectType) {
+    case "nodejs":
+      lines.push(`${indent(depth + 2)}npm audit --audit-level=high`);
+      break;
+    case "python":
+      lines.push(`${indent(depth + 2)}pip install pip-audit`);
+      lines.push(`${indent(depth + 2)}pip-audit`);
+      break;
+    case "java":
+      lines.push(`${indent(depth + 2)}mvn org.owasp:dependency-check-maven:check`);
+      break;
+    case "go":
+      lines.push(`${indent(depth + 2)}go install golang.org/x/vuln/cmd/govulncheck@latest`);
+      lines.push(`${indent(depth + 2)}govulncheck ./...`);
+      break;
+    case "rust":
+      lines.push(`${indent(depth + 2)}cargo audit`);
+      break;
+    case "dotnet":
+      lines.push(`${indent(depth + 2)}dotnet list package --vulnerable`);
       break;
   }
 

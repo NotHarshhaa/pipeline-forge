@@ -6,6 +6,10 @@ export interface PipelineConfig {
   pythonVersion?: string;
   javaVersion?: string;
   goVersion?: string;
+  packageManager?: "npm" | "yarn" | "pnpm" | "bun" | "pip" | "poetry" | "maven" | "gradle";
+  isMonorepo?: boolean;
+  monorepoTool?: "nx" | "turborepo" | "lerna" | "rush" | "none";
+  workingDirectory?: string;
   enableDocker: boolean;
   dockerfilePath?: string;
   dockerImageName?: string;
@@ -22,6 +26,13 @@ export interface PipelineConfig {
   enableDependencyAudit: boolean;
   enableContainerScan: boolean;
   enableSonarQube: boolean;
+  // CI Provider Settings
+  ciSettings?: {
+    concurrency?: number;
+    timeout?: number;
+    retryOnFailure?: boolean;
+    parallelJobs?: boolean;
+  };
   // New features
   environmentVariables?: Array<{ key: string; value: string }>;
   customScripts?: {

@@ -21,7 +21,13 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
   * Jenkins ✅
   * CircleCI ✅
   * Azure Pipelines ✅
-* � **Clean YAML Output** — Copy or download your pipeline instantly
+* 📄 **Clean YAML Output** — Copy or download your pipeline instantly
+
+### Project Configuration
+* 📦 **Package Manager Support** — npm, Yarn, pnpm, Bun, pip, Poetry, Maven, Gradle
+* 🏗️ **Monorepo Support** — Nx, Turborepo, Lerna, Rush integration
+* 📁 **Working Directory** — Configure custom working directories
+* ⚙️ **CI Settings** — Concurrency limits, timeouts, retry logic, parallel execution
 
 ### Pipeline Steps
 * 🧪 **Unit Tests** — Run automated unit tests with coverage reporting
@@ -67,15 +73,88 @@ Visit the live site: **[Pipeline Forge](http://localhost:3000)** (when running l
 
 ## 🧠 **How It Works**
 
-1. **Select your project type** (Node.js, Python, Java, Go, Rust, .NET)
+1. **Configure project details** (name, type, package manager, monorepo settings)
 2. **Choose your CI/CD provider** (GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines)
-3. **Configure build, test, and deploy steps** (linting, tests, Docker, deployment)
-4. **Add advanced features** (environment variables, custom scripts, notifications)
-5. **Generate your pipeline YAML instantly** (copy or download)
+3. **Configure pipeline settings** (concurrency, timeout, retry logic, parallel jobs)
+4. **Select pipeline steps** (linting, tests, formatting, security scans, Docker)
+5. **Choose deployment target** (AWS, Kubernetes, Vercel, Netlify, Heroku, Azure, GCP)
+6. **Add advanced features** (environment variables, custom scripts, notifications, matrix builds)
+7. **Generate your pipeline YAML instantly** (copy or download)
 
 ---
 
-## 🚀 **Pipeline Steps Guide**
+## � **Project Configuration Guide**
+
+### Package Manager Support 📦
+Choose the right package manager for your project:
+
+#### Node.js Projects
+- **npm**: Default Node.js package manager
+- **Yarn**: Fast, reliable, and secure dependency management
+- **pnpm**: Efficient disk space usage with hard links
+- **Bun**: Ultra-fast all-in-one JavaScript runtime and toolkit
+
+#### Python Projects
+- **pip**: Standard Python package installer
+- **Poetry**: Modern dependency management and packaging
+
+#### Java Projects
+- **Maven**: Comprehensive project management tool
+- **Gradle**: Flexible build automation system
+
+### Monorepo Support 🏗️
+Build pipelines optimized for monorepo architectures:
+- **Nx**: Smart, fast, and extensible build system
+- **Turborepo**: High-performance build system for JavaScript/TypeScript
+- **Lerna**: Tool for managing JavaScript projects with multiple packages
+- **Rush**: Scalable monorepo manager for the web
+- **Custom**: Configure your own monorepo setup
+
+**Benefits:**
+- Optimized caching strategies
+- Affected project detection
+- Parallel task execution
+- Shared configuration
+
+### Working Directory 📁
+Specify custom working directories for:
+- Subdirectory projects
+- Monorepo packages
+- Multi-environment setups
+- Complex project structures
+
+## ⚙️ **CI/CD Provider Settings**
+
+### Pipeline Configuration Options
+
+#### Concurrency Limit
+Control how many pipeline runs can execute simultaneously:
+- **Range**: 1-10 concurrent runs
+- **Use Case**: Prevent resource exhaustion
+- **Best Practice**: Set based on your CI plan limits
+
+#### Timeout Settings
+Configure maximum execution time for pipelines:
+- **Range**: 5-360 minutes
+- **Default**: 60 minutes
+- **Use Case**: Prevent stuck jobs from consuming resources
+- **Recommendation**: Set based on typical build duration + buffer
+
+#### Retry on Failure
+Automatically retry failed jobs:
+- **Flaky Test Handling**: Retry transient failures
+- **Network Issues**: Recover from temporary connectivity problems
+- **Resource Constraints**: Retry when resources become available
+- **Configurable Attempts**: Set retry count per job
+
+#### Parallel Job Execution
+Run multiple jobs simultaneously:
+- **Faster Builds**: Execute independent jobs in parallel
+- **Resource Optimization**: Maximize CI runner utilization
+- **Matrix Builds**: Test across multiple configurations
+- **Cost Efficiency**: Reduce total pipeline duration
+
+## �🚀 **Pipeline Steps Guide**
 
 ### Testing & Quality Assurance 🧪
 

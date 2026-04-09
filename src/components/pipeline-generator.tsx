@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -98,6 +98,10 @@ export function PipelineGenerator() {
     projectType: "nodejs",
     ciProvider: "github-actions",
     nodeVersion: "20",
+    packageManager: "npm",
+    isMonorepo: false,
+    monorepoTool: "none",
+    workingDirectory: ".",
     enableDocker: false,
     dockerImageName: "",
     enableTests: true,
@@ -113,6 +117,12 @@ export function PipelineGenerator() {
     enableDependencyAudit: false,
     enableContainerScan: false,
     enableSonarQube: false,
+    ciSettings: {
+      concurrency: 1,
+      timeout: 60,
+      retryOnFailure: false,
+      parallelJobs: false,
+    },
     environmentVariables: [],
     customScripts: {},
     notifications: {
@@ -158,6 +168,22 @@ export function PipelineGenerator() {
   const [output, setOutput] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Update package manager default when project type changes
+  useEffect(() => {
+    const defaults: Record<string, string> = {
+      nodejs: "npm",
+      python: "pip",
+      java: "maven",
+      go: "",
+      rust: "",
+      dotnet: "",
+    };
+    const defaultPm = defaults[config.projectType];
+    if (defaultPm && config.packageManager !== defaultPm) {
+      updateConfig("packageManager", defaultPm as PipelineConfig["packageManager"]);
+    }
+  }, [config.projectType]);
 
   const handleGenerate = useCallback(() => {
     const yaml = generatePipeline(config);
@@ -246,6 +272,112 @@ export function PipelineGenerator() {
                 })}
               </div>
             </div>
+
+            {(config.projectType === "nodejs" || config.projectType === "python" || config.projectType === "java") && (
+              <>
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="package-manager" className="text-sm">Package Manager</Label>
+                    <Select
+                      value={config.packageManager || (config.projectType === "nodejs" ? "npm" : config.projectType === "python" ? "pip" : "maven")}
+                      onValueChange={(v) => updateConfig("packageManager", v as PipelineConfig["packageManager"])}
+                    >
+                      <SelectTrigger id="package-manager" className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent position="popper" sideOffset={5}>
+                        {config.projectType === "nodejs" && (
+                          <>
+                            <SelectItem value="npm">npm</SelectItem>
+                            <SelectItem value="yarn">Yarn</SelectItem>
+                            <SelectItem value="pnpm">pnpm</SelectItem>
+                            <SelectItem value="bun">Bun</SelectItem>
+                          </>
+                        )}
+                        {config.projectType === "python" && (
+                          <>
+                            <SelectItem value="pip">pip</SelectItem>
+                            <SelectItem value="poetry">Poetry</SelectItem>
+                          </>
+                        )}
+                        {config.projectType === "java" && (
+                          <>
+                            <SelectItem value="maven">Maven</SelectItem>
+                            <SelectItem value="gradle">Gradle</SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="working-dir" className="text-sm">Working Directory</Label>
+                    <input
+                      id="working-dir"
+                      type="text"
+                      value={config.workingDirectory || "."}
+                      onChange={(e) => updateConfig("workingDirectory", e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      placeholder="."
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {(config.projectType === "go" || config.projectType === "rust" || config.projectType === "dotnet") && (
+              <>
+                <Separator />
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="working-dir" className="text-sm">Working Directory</Label>
+                  <input
+                    id="working-dir"
+                    type="text"
+                    value={config.workingDirectory || "."}
+                    onChange={(e) => updateConfig("workingDirectory", e.target.value)}
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    placeholder="."
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="monorepo"
+                  checked={config.isMonorepo}
+                  onCheckedChange={(checked) => updateConfig("isMonorepo", checked === true)}
+                />
+                <Label htmlFor="monorepo" className="text-sm font-medium cursor-pointer">
+                  Monorepo Project
+                </Label>
+              </div>
+
+              {config.isMonorepo && (
+                <div className="ml-6 space-y-1.5">
+                  <Label htmlFor="monorepo-tool" className="text-xs text-muted-foreground">Monorepo Tool</Label>
+                  <Select
+                    value={config.monorepoTool || "none"}
+                    onValueChange={(v) => updateConfig("monorepoTool", v as PipelineConfig["monorepoTool"])}
+                  >
+                    <SelectTrigger id="monorepo-tool" className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper" sideOffset={5}>
+                      <SelectItem value="nx">Nx</SelectItem>
+                      <SelectItem value="turborepo">Turborepo</SelectItem>
+                      <SelectItem value="lerna">Lerna</SelectItem>
+                      <SelectItem value="rush">Rush</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -253,33 +385,118 @@ export function PipelineGenerator() {
         <Card>
           <CardHeader className="pb-3 sm:pb-4">
             <CardTitle className="text-base sm:text-lg">CI/CD Provider</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Choose your pipeline platform</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Choose your pipeline platform and configure settings</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-              {ciProviders.map((provider) => {
-                const Icon = provider.icon;
-                const isSelected = config.ciProvider === provider.value;
-                return (
-                  <button
-                    key={provider.value}
-                    onClick={() =>
-                      updateConfig(
-                        "ciProvider",
-                        provider.value as PipelineConfig["ciProvider"]
-                      )
+          <CardContent className="space-y-3 sm:space-y-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-sm">Provider</Label>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                {ciProviders.map((provider) => {
+                  const Icon = provider.icon;
+                  const isSelected = config.ciProvider === provider.value;
+                  return (
+                    <button
+                      key={provider.value}
+                      onClick={() =>
+                        updateConfig(
+                          "ciProvider",
+                          provider.value as PipelineConfig["ciProvider"]
+                        )
+                      }
+                      className={`relative flex flex-col items-center gap-1.5 sm:gap-2 rounded-lg border-2 p-2.5 sm:p-3 text-xs sm:text-sm font-medium transition-all hover:bg-accent/50 ${
+                        isSelected
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border text-muted-foreground"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-center leading-tight">{provider.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2 sm:space-y-3">
+              <Label className="text-sm font-semibold">Pipeline Settings</Label>
+              
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="concurrency" className="text-xs text-muted-foreground">
+                    Concurrency Limit
+                  </Label>
+                  <Input
+                    id="concurrency"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={config.ciSettings?.concurrency || 1}
+                    onChange={(e) =>
+                      updateConfig("ciSettings", {
+                        ...config.ciSettings!,
+                        concurrency: parseInt(e.target.value) || 1,
+                      })
                     }
-                    className={`relative flex flex-col items-center gap-1.5 sm:gap-2 rounded-lg border-2 p-2.5 sm:p-3 text-xs sm:text-sm font-medium transition-all hover:bg-accent/50 ${
-                      isSelected
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border text-muted-foreground"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="text-center leading-tight">{provider.label}</span>
-                  </button>
-                );
-              })}
+                    className="h-8 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="timeout" className="text-xs text-muted-foreground">
+                    Timeout (minutes)
+                  </Label>
+                  <Input
+                    id="timeout"
+                    type="number"
+                    min="5"
+                    max="360"
+                    value={config.ciSettings?.timeout || 60}
+                    onChange={(e) =>
+                      updateConfig("ciSettings", {
+                        ...config.ciSettings!,
+                        timeout: parseInt(e.target.value) || 60,
+                      })
+                    }
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="retry-on-failure"
+                    checked={config.ciSettings?.retryOnFailure}
+                    onCheckedChange={(checked) =>
+                      updateConfig("ciSettings", {
+                        ...config.ciSettings!,
+                        retryOnFailure: checked === true,
+                      })
+                    }
+                  />
+                  <Label htmlFor="retry-on-failure" className="text-xs cursor-pointer">
+                    Retry on failure (auto-retry failed jobs)
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="parallel-jobs"
+                    checked={config.ciSettings?.parallelJobs}
+                    onCheckedChange={(checked) =>
+                      updateConfig("ciSettings", {
+                        ...config.ciSettings!,
+                        parallelJobs: checked === true,
+                      })
+                    }
+                  />
+                  <Label htmlFor="parallel-jobs" className="text-xs cursor-pointer">
+                    Enable parallel job execution
+                  </Label>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
