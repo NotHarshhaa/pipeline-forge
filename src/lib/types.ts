@@ -12,10 +12,16 @@ export interface PipelineConfig {
   enableTests: boolean;
   enableLinting: boolean;
   enableBuild: boolean;
-  deployTarget: "none" | "aws" | "kubernetes";
+  deployTarget: "none" | "aws" | "kubernetes" | "vercel" | "netlify" | "heroku" | "azure" | "gcp";
   branches: string[];
   enableCaching: boolean;
   enableSecurityScan: boolean;
+  enableE2ETesting: boolean;
+  enableCodeFormatting: boolean;
+  enableTypeChecking: boolean;
+  enableDependencyAudit: boolean;
+  enableContainerScan: boolean;
+  enableSonarQube: boolean;
   // New features
   environmentVariables?: Array<{ key: string; value: string }>;
   customScripts?: {

@@ -54,6 +54,13 @@ import {
   IconChartBar,
   IconRocket,
   IconDatabase,
+  IconBrandVercel,
+  IconWorld,
+  IconBrandAzure,
+  IconBrandGoogle,
+  IconCloudOff,
+  IconBrandDocker as IconKubernetes,
+  IconWorldWww,
 } from "@tabler/icons-react";
 import { generatePipeline, type PipelineConfig } from "@/lib/generate-pipeline";
 
@@ -75,9 +82,14 @@ const ciProviders = [
 ] as const;
 
 const deployTargets = [
-  { value: "none", label: "No Deployment" },
+  { value: "none", label: "No Deployment", icon: IconCloudOff },
   { value: "aws", label: "AWS (ECS)", icon: IconBrandAws },
-  { value: "kubernetes", label: "Kubernetes" },
+  { value: "kubernetes", label: "Kubernetes", icon: IconKubernetes },
+  { value: "vercel", label: "Vercel", icon: IconBrandVercel },
+  { value: "netlify", label: "Netlify", icon: IconWorld },
+  { value: "heroku", label: "Heroku", icon: IconWorldWww },
+  { value: "azure", label: "Azure App Service", icon: IconBrandAzure },
+  { value: "gcp", label: "Google Cloud Platform", icon: IconBrandGoogle },
 ] as const;
 
 export function PipelineGenerator() {
@@ -95,6 +107,12 @@ export function PipelineGenerator() {
     branches: ["main"],
     enableCaching: true,
     enableSecurityScan: false,
+    enableE2ETesting: false,
+    enableCodeFormatting: false,
+    enableTypeChecking: false,
+    enableDependencyAudit: false,
+    enableContainerScan: false,
+    enableSonarQube: false,
     environmentVariables: [],
     customScripts: {},
     notifications: {
@@ -276,10 +294,16 @@ export function PipelineGenerator() {
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {[
                 { key: "enableLinting" as const, label: "Linting" },
-                { key: "enableTests" as const, label: "Tests" },
+                { key: "enableTests" as const, label: "Unit Tests" },
+                { key: "enableE2ETesting" as const, label: "E2E Tests" },
                 { key: "enableBuild" as const, label: "Build" },
                 { key: "enableCaching" as const, label: "Caching" },
+                { key: "enableCodeFormatting" as const, label: "Code Formatting" },
+                { key: "enableTypeChecking" as const, label: "Type Checking" },
                 { key: "enableSecurityScan" as const, label: "Security Scan" },
+                { key: "enableDependencyAudit" as const, label: "Dependency Audit" },
+                { key: "enableContainerScan" as const, label: "Container Scan" },
+                { key: "enableSonarQube" as const, label: "SonarQube Analysis" },
                 { key: "enableDocker" as const, label: "Docker Build" },
               ].map((opt) => (
                 <div key={opt.key} className="flex items-center space-x-1.5 sm:space-x-2">
@@ -330,28 +354,36 @@ export function PipelineGenerator() {
             <CardDescription className="text-xs sm:text-sm">Where should your app be deployed?</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4">
-            <Select
-              value={config.deployTarget}
-              onValueChange={(v) =>
-                updateConfig("deployTarget", v as PipelineConfig["deployTarget"])
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select deployment target" />
-              </SelectTrigger>
-              <SelectContent>
-                {deployTargets.map((target) => (
-                  <SelectItem key={target.value} value={target.value}>
-                    <span className="flex items-center gap-2">
-                      {"icon" in target && target.icon && (
-                        <target.icon className="h-4 w-4" />
-                      )}
-                      {target.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label className="text-sm">Deployment Target</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {deployTargets.map((target) => {
+                  const Icon = "icon" in target ? target.icon : null;
+                  const isSelected = config.deployTarget === target.value;
+                  return (
+                    <button
+                      key={target.value}
+                      onClick={() =>
+                        updateConfig(
+                          "deployTarget",
+                          target.value as PipelineConfig["deployTarget"]
+                        )
+                      }
+                      className={`flex items-center gap-2 rounded-lg border-2 p-2.5 sm:p-3 text-xs sm:text-sm font-medium transition-all hover:bg-accent/50 ${
+                        isSelected
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border text-muted-foreground"
+                      }`}
+                    >
+                      {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                      <span className="truncate">{target.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Separator />
 
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-sm">Target Branches</Label>
@@ -366,9 +398,32 @@ export function PipelineGenerator() {
                   <SelectItem value="main">main</SelectItem>
                   <SelectItem value="master">master</SelectItem>
                   <SelectItem value="develop">develop</SelectItem>
+                  <SelectItem value="staging">staging</SelectItem>
+                  <SelectItem value="production">production</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {config.deployTarget !== "none" && (
+              <>
+                <Separator />
+                <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <IconCloud className="h-4 w-4 text-primary" />
+                    <Label className="text-xs font-semibold">Deployment Settings</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {config.deployTarget === "aws" && "Deploy to AWS ECS with automated container orchestration"}
+                    {config.deployTarget === "kubernetes" && "Deploy to Kubernetes cluster with kubectl apply"}
+                    {config.deployTarget === "vercel" && "Deploy to Vercel with automatic preview deployments"}
+                    {config.deployTarget === "netlify" && "Deploy to Netlify with continuous deployment"}
+                    {config.deployTarget === "heroku" && "Deploy to Heroku with Git-based deployment"}
+                    {config.deployTarget === "azure" && "Deploy to Azure App Service with CI/CD integration"}
+                    {config.deployTarget === "gcp" && "Deploy to Google Cloud Platform with Cloud Run"}
+                  </p>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
