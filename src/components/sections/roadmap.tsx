@@ -34,7 +34,7 @@ export function Roadmap() {
             We&apos;re constantly improving Pipeline Forge.
           </p>
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {roadmap.map((item) => (
             <div
               key={item.label}

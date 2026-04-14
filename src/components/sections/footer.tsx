@@ -18,9 +18,9 @@ export function Footer() {
     <footer className="border-t bg-muted/30">
       <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
           {/* Brand Section */}
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 sm:col-span-2 md:col-span-1 lg:col-span-2">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
                 <IconGitBranch className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

@@ -119,7 +119,7 @@ export default function InstructionsPage() {
 
         {/* Features Grid */}
         <div className="mb-8 sm:mb-10 md:mb-12">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (

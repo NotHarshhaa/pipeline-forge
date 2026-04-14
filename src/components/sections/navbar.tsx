@@ -9,13 +9,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
+  const navLinks: Array<{ href: string; label: string; hideOnMd?: boolean }> = [
     { href: "#features", label: "Features" },
     { href: "#how-it-works", label: "How It Works" },
     { href: "/instructions", label: "Instructions" },
     { href: "#generator", label: "Generator" },
-    { href: "#roadmap", label: "Roadmap" },
-    { href: "#creator", label: "Creator" },
+    { href: "#roadmap", label: "Roadmap", hideOnMd: true },
+    { href: "#creator", label: "Creator", hideOnMd: true },
   ];
 
   const handleNavClick = () => {
@@ -23,7 +23,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md overflow-x-hidden">
       <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -33,12 +33,12 @@ export function Navbar() {
             Pipeline Forge
           </span>
         </a>
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+        <nav className="hidden md:flex items-center gap-3 md:gap-4 lg:gap-6 text-xs sm:text-sm font-medium text-muted-foreground">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className="hover:text-foreground transition-colors"
+              className={`hover:text-foreground transition-colors ${link.hideOnMd ? 'hidden lg:inline' : ''}`}
             >
               {link.label}
             </a>
@@ -61,15 +61,16 @@ export function Navbar() {
             href="https://github.com/NotHarshhaa/pipeline-forge"
             target="_blank"
             rel="noopener noreferrer"
+            className="hidden lg:block"
           >
-            <Button variant="outline" size="sm" className="gap-2">
-              <IconBrandGithub className="h-4 w-4" />
+            <Button variant="outline" size="sm" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <IconBrandGithub className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">GitHub</span>
             </Button>
           </a>
-          <a href="#generator">
-            <Button size="sm" className="gap-2">
-              <IconBolt className="h-4 w-4" />
+          <a href="#generator" className="hidden lg:block">
+            <Button size="sm" className="gap-1.5 sm:gap-2 text-xs sm:text-sm">
+              <IconBolt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Get Started</span>
             </Button>
           </a>

@@ -36,7 +36,7 @@ export function HowItWorks() {
             From zero to a production-ready pipeline in under a minute.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
           {steps.map((step, i) => (
             <div key={step.number} className="relative text-center">
               <div className="mx-auto flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground text-lg sm:text-xl font-bold mb-3 sm:mb-4">

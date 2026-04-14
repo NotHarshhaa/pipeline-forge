@@ -18,7 +18,7 @@ export function TechStack() {
             Built with modern tools
           </h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 max-w-3xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-w-3xl mx-auto">
           {techStack.map((tech) => {
             const Icon = tech.icon;
             return (

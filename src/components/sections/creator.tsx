@@ -13,7 +13,7 @@ export function Creator() {
             Built by a passionate engineer
           </h2>
         </div>
-        <div className="mx-auto max-w-2xl md:max-w-3xl lg:max-w-4xl">
+        <div className="mx-auto max-w-2xl sm:max-w-3xl md:max-w-3xl lg:max-w-4xl">
           <Card className="overflow-hidden">
             <CardContent className="p-3 sm:p-6 md:p-8">
               <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">

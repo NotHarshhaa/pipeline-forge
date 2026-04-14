@@ -746,7 +746,7 @@ export function PipelineGenerator() {
   }, [history, historyIndex]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
       {/* Configuration Panel */}
       <div className="space-y-3 sm:space-y-6">
         {/* Cost Estimation */}
@@ -770,7 +770,7 @@ export function PipelineGenerator() {
                   <div className="text-sm font-semibold">{costEstimate.tier}</div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-muted/50">
                   <div className="text-xs text-muted-foreground">Monthly Minutes</div>
                   <div className="text-lg font-bold">{costEstimate.monthlyMinutes}</div>
@@ -835,7 +835,7 @@ export function PipelineGenerator() {
             <CardDescription className="text-xs sm:text-sm">Start with a pre-configured template</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2">
               {Object.entries(presetLabels).map(([key, { label, description, icon: Icon }]) => (
                 <button
                   key={key}
@@ -1005,7 +1005,7 @@ export function PipelineGenerator() {
               <>
                 <Separator />
 
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label htmlFor="package-manager" className="text-sm">Package Manager</Label>
                     <Select
@@ -1118,7 +1118,7 @@ export function PipelineGenerator() {
           <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-sm">Provider</Label>
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                 {ciProviders.map((provider) => {
                   const Icon = provider.icon;
                   const isSelected = config.ciProvider === provider.value;
@@ -1150,7 +1150,7 @@ export function PipelineGenerator() {
             <div className="space-y-2 sm:space-y-3">
               <Label className="text-sm font-semibold">Pipeline Settings</Label>
               
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="concurrency" className="text-xs text-muted-foreground">
                     Concurrency Limit
@@ -1236,7 +1236,7 @@ export function PipelineGenerator() {
             <CardDescription className="text-xs sm:text-sm">Configure what your pipeline does</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 sm:space-y-4">
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
               {[
                 { key: "enableLinting" as const, label: "Linting" },
                 { key: "enableTests" as const, label: "Unit Tests" },
@@ -1301,7 +1301,7 @@ export function PipelineGenerator() {
           <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-sm">Deployment Target</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                 {deployTargets.map((target) => {
                   const Icon = "icon" in target ? target.icon : null;
                   const isSelected = config.deployTarget === target.value;

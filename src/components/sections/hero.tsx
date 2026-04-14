@@ -165,7 +165,7 @@ export function Hero() {
           optimized, secure, and scalable CI/CD pipelines for modern
           applications — without writing YAML from scratch.
         </p>
-        <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+        <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row md:flex-row items-center justify-center gap-3 sm:gap-4">
           <a href="#generator">
             <Button size="lg" className="gap-2 text-base font-semibold px-8">
               <IconBolt className="h-5 w-5" />
