@@ -15,6 +15,14 @@ import {
   IconRocket,
   IconDatabase,
   IconCheck,
+  IconDeviceFloppy,
+  IconPalette,
+  IconTemplate,
+  IconUpload,
+  IconArrowBackUp,
+  IconBulb,
+  IconCurrencyDollar,
+  IconDeviceMobile,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -94,14 +102,54 @@ const features = [
     title: "Database & Services",
     description: "Configure databases, Redis, and Elasticsearch services.",
   },
+  {
+    icon: IconDeviceFloppy,
+    title: "Configuration Persistence",
+    description: "Save and load your configurations with local storage.",
+  },
+  {
+    icon: IconPalette,
+    title: "Syntax Highlighting",
+    description: "Color-coded YAML output for better readability.",
+  },
+  {
+    icon: IconTemplate,
+    title: "Quick Presets",
+    description: "Pre-configured templates for common use cases.",
+  },
+  {
+    icon: IconUpload,
+    title: "Export/Import",
+    description: "Share configurations as JSON files.",
+  },
+  {
+    icon: IconArrowBackUp,
+    title: "Undo/Redo",
+    description: "Navigate through configuration history with ease.",
+  },
+  {
+    icon: IconBulb,
+    title: "Best Practices Analyzer",
+    description: "Real-time suggestions for optimal pipeline configuration.",
+  },
+  {
+    icon: IconCurrencyDollar,
+    title: "Cost Estimation",
+    description: "Estimate monthly CI/CD costs based on your configuration.",
+  },
+  {
+    icon: IconDeviceMobile,
+    title: "Responsive Design",
+    description: "Fully responsive UI optimized for mobile and desktop.",
+  },
 ];
 
 export function Features() {
   return (
-    <section id="features" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-muted/30">
+    <section id="features" className="py-6 sm:py-8 md:py-12 lg:py-16 bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6 sm:mb-8 md:mb-12">
-          <Badge variant="secondary" className="mb-2 sm:mb-4">Features</Badge>
+        <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <Badge variant="secondary" className="mb-2 sm:mb-3">Features</Badge>
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
             Everything you need for CI/CD
           </h2>

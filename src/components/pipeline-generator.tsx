@@ -61,8 +61,320 @@ import {
   IconCloudOff,
   IconBrandDocker as IconKubernetes,
   IconWorldWww,
+  IconDeviceFloppy,
+  IconUpload,
+  IconRotate,
+  IconTemplate,
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconAlertTriangle,
+  IconInfoCircle,
+  IconCurrencyDollar,
 } from "@tabler/icons-react";
 import { generatePipeline, type PipelineConfig } from "@/lib/generate-pipeline";
+
+// Simple YAML syntax highlighter
+function highlightYAML(yaml: string): string {
+  let highlighted = yaml
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Comments
+  highlighted = highlighted.replace(/^(\s*)#.*$/gm, '$1<span class="text-muted-foreground italic">$&</span>');
+  
+  // Keys (before colon)
+  highlighted = highlighted.replace(/^(\s*)([\w\-]+):/gm, '$1<span class="text-blue-500 font-semibold">$2</span>:');
+  
+  // String values in quotes
+  highlighted = highlighted.replace(/: ("[^"]*")/g, ': <span class="text-green-600">$1</span>');
+  highlighted = highlighted.replace(/: ('[^']*')/g, ': <span class="text-green-600">$1</span>');
+  
+  // Numbers
+  highlighted = highlighted.replace(/: (\d+)/g, ': <span class="text-orange-500">$1</span>');
+  
+  // Boolean values
+  highlighted = highlighted.replace(/: (true|false)/g, ': <span class="text-purple-600">$1</span>');
+  
+  // Special YAML characters
+  highlighted = highlighted.replace(/(\${{[^}]+}})/g, '<span class="text-yellow-600">$1</span>');
+  
+  // YAML anchors and aliases
+  highlighted = highlighted.replace(/(&[\w\-]+)/g, '<span class="text-pink-500">$1</span>');
+  highlighted = highlighted.replace(/(\*[\w\-]+)/g, '<span class="text-pink-500">$1</span>');
+  
+  return highlighted;
+}
+
+// Preset configurations for common use cases
+const presets: Record<string, Partial<PipelineConfig>> = {
+  "basic-nodejs": {
+    projectType: "nodejs",
+    ciProvider: "github-actions",
+    nodeVersion: "20",
+    packageManager: "npm",
+    enableTests: true,
+    enableLinting: true,
+    enableBuild: true,
+    enableCaching: true,
+    deployTarget: "none",
+    ciSettings: { concurrency: 1, timeout: 60, retryOnFailure: false, parallelJobs: false },
+  },
+  "production-nodejs": {
+    projectType: "nodejs",
+    ciProvider: "github-actions",
+    nodeVersion: "20",
+    packageManager: "npm",
+    enableTests: true,
+    enableLinting: true,
+    enableBuild: true,
+    enableCaching: true,
+    enableSecurityScan: true,
+    enableDependencyAudit: true,
+    enableCodeFormatting: true,
+    enableTypeChecking: true,
+    deployTarget: "vercel",
+    ciSettings: { concurrency: 2, timeout: 60, retryOnFailure: true, parallelJobs: true },
+    notifications: { enabled: true, slack: { enabled: false }, email: { enabled: false } },
+  },
+  "python-api": {
+    projectType: "python",
+    ciProvider: "github-actions",
+    pythonVersion: "3.12",
+    packageManager: "pip",
+    enableTests: true,
+    enableLinting: true,
+    enableBuild: true,
+    enableCaching: true,
+    enableSecurityScan: true,
+    enableDependencyAudit: true,
+    deployTarget: "none",
+    ciSettings: { concurrency: 1, timeout: 60, retryOnFailure: false, parallelJobs: false },
+  },
+  "docker-k8s": {
+    projectType: "nodejs",
+    ciProvider: "github-actions",
+    nodeVersion: "20",
+    packageManager: "npm",
+    enableTests: true,
+    enableLinting: true,
+    enableBuild: true,
+    enableCaching: true,
+    enableDocker: true,
+    enableContainerScan: true,
+    deployTarget: "kubernetes",
+    ciSettings: { concurrency: 2, timeout: 90, retryOnFailure: true, parallelJobs: true },
+  },
+  "full-featured": {
+    projectType: "nodejs",
+    ciProvider: "github-actions",
+    nodeVersion: "20",
+    packageManager: "npm",
+    enableTests: true,
+    enableLinting: true,
+    enableBuild: true,
+    enableCaching: true,
+    enableSecurityScan: true,
+    enableDependencyAudit: true,
+    enableCodeFormatting: true,
+    enableTypeChecking: true,
+    enableE2ETesting: true,
+    enableDocker: true,
+    enableContainerScan: true,
+    enableSonarQube: true,
+    deployTarget: "aws",
+    ciSettings: { concurrency: 3, timeout: 120, retryOnFailure: true, parallelJobs: true },
+    notifications: { enabled: true, slack: { enabled: true }, email: { enabled: true } },
+    matrixBuild: { enabled: true, versions: ["18", "20", "22"] },
+    artifacts: { enabled: true, paths: ["dist/", "build/"], retention: 30 },
+    codeQuality: { enabled: true, coverageThreshold: 80, qualityGate: true },
+  },
+};
+
+const presetLabels: Record<string, { label: string; description: string; icon: any }> = {
+  "basic-nodejs": { label: "Basic Node.js", description: "Simple setup with tests, linting & build", icon: IconBrandNodejs },
+  "production-nodejs": { label: "Production Node.js", description: "Full-featured with security & deployment", icon: IconRocket },
+  "python-api": { label: "Python API", description: "Python with security scanning", icon: IconBrandPython },
+  "docker-k8s": { label: "Docker + K8s", description: "Containerized with Kubernetes deployment", icon: IconBrandDocker },
+  "full-featured": { label: "Full Featured", description: "All features enabled for enterprise", icon: IconSparkles },
+};
+
+// Best practices analyzer
+interface Suggestion {
+  type: 'warning' | 'info' | 'success';
+  message: string;
+}
+
+function analyzeBestPractices(config: PipelineConfig): Suggestion[] {
+  const suggestions: Suggestion[] = [];
+  
+  // Security checks
+  if (!config.enableSecurityScan) {
+    suggestions.push({
+      type: 'warning',
+      message: 'Consider enabling security scanning to detect vulnerabilities'
+    });
+  }
+  
+  if (!config.enableDependencyAudit) {
+    suggestions.push({
+      type: 'warning',
+      message: 'Dependency audit helps identify vulnerable packages'
+    });
+  }
+  
+  if (config.enableDocker && !config.enableContainerScan) {
+    suggestions.push({
+      type: 'warning',
+      message: 'Container scanning is recommended for Docker builds'
+    });
+  }
+  
+  // Code quality checks
+  if (!config.enableCodeFormatting) {
+    suggestions.push({
+      type: 'info',
+      message: 'Code formatting ensures consistent style across the team'
+    });
+  }
+  
+  if ((config.projectType === 'nodejs' || config.projectType === 'python') && !config.enableTypeChecking) {
+    suggestions.push({
+      type: 'info',
+      message: 'Type checking catches bugs before runtime'
+    });
+  }
+  
+  // Performance checks
+  if (!config.enableCaching) {
+    suggestions.push({
+      type: 'warning',
+      message: 'Caching significantly speeds up build times'
+    });
+  }
+  
+  if (!config.ciSettings?.parallelJobs && (config.enableTests || config.enableLinting)) {
+    suggestions.push({
+      type: 'info',
+      message: 'Parallel jobs can reduce pipeline execution time'
+    });
+  }
+  
+  // Deployment checks
+  if (config.deployTarget !== 'none' && !config.enableTests) {
+    suggestions.push({
+      type: 'warning',
+      message: 'Running tests before deployment is highly recommended'
+    });
+  }
+  
+  // Success messages
+  if (config.enableSecurityScan && config.enableDependencyAudit && config.enableCaching) {
+    suggestions.push({
+      type: 'success',
+      message: 'Great! Your pipeline has essential security and performance features'
+    });
+  }
+  
+  if (config.codeQuality?.enabled && config.codeQuality?.qualityGate) {
+    suggestions.push({
+      type: 'success',
+      message: 'Quality gates ensure code standards are met'
+    });
+  }
+  
+  return suggestions;
+}
+
+// Pipeline cost estimator
+interface CostEstimate {
+  monthlyMinutes: number;
+  estimatedCost: number;
+  costRange: string;
+  provider: string;
+  tier: string;
+}
+
+function estimatePipelineCost(config: PipelineConfig): CostEstimate {
+  // Base assumptions (adjust based on typical usage)
+  const runsPerMonth = 50; // Average 50 pipeline runs per month
+  const baseMinutesPerRun = 5; // Base time per run
+  
+  // Calculate complexity multiplier based on features
+  let complexityMultiplier = 1;
+  
+  if (config.enableTests) complexityMultiplier += 0.3;
+  if (config.enableE2ETesting) complexityMultiplier += 0.5;
+  if (config.enableBuild) complexityMultiplier += 0.4;
+  if (config.enableSecurityScan) complexityMultiplier += 0.3;
+  if (config.enableDocker) complexityMultiplier += 0.5;
+  if (config.enableSonarQube) complexityMultiplier += 0.4;
+  if (config.matrixBuild?.enabled && config.matrixBuild.versions) complexityMultiplier += config.matrixBuild.versions.length * 0.5;
+  if (config.performance?.enabled) complexityMultiplier += 0.4;
+  if (config.services?.enabled) complexityMultiplier += 0.3;
+  
+  // Timeout adjustment
+  const timeoutMultiplier = (config.ciSettings?.timeout || 60) / 60;
+  
+  const minutesPerRun = baseMinutesPerRun * complexityMultiplier * timeoutMultiplier;
+  const monthlyMinutes = Math.round(runsPerMonth * minutesPerRun);
+  
+  // Provider-specific pricing (simplified estimates)
+  let costPerMinute = 0.008; // GitHub Actions default
+  let provider = 'GitHub Actions';
+  let tier = 'Free Tier';
+  
+  switch (config.ciProvider) {
+    case 'github-actions':
+      costPerMinute = 0.008;
+      provider = 'GitHub Actions';
+      if (monthlyMinutes > 2000) {
+        tier = 'Pro ($4/500 min)';
+      }
+      break;
+    case 'gitlab-ci':
+      costPerMinute = 0.014;
+      provider = 'GitLab CI';
+      if (monthlyMinutes > 400) {
+        tier = 'Paid ($20/1000 min)';
+      }
+      break;
+    case 'circleci':
+      costPerMinute = 0.01;
+      provider = 'CircleCI';
+      if (monthlyMinutes > 6000) {
+        tier = 'Performance ($15/1000 min)';
+      }
+      break;
+    case 'azure-pipelines':
+      costPerMinute = 0.006;
+      provider = 'Azure Pipelines';
+      if (monthlyMinutes > 1800) {
+        tier = 'Paid ($40/1800 min)';
+      }
+      break;
+    case 'jenkins':
+      costPerMinute = 0.005; // Self-hosted, lower cost
+      provider = 'Jenkins (Self-hosted)';
+      tier = 'Infrastructure costs apply';
+      break;
+  }
+  
+  const estimatedCost = Math.round(monthlyMinutes * costPerMinute);
+  
+  // Create cost range
+  const minCost = Math.round(estimatedCost * 0.7);
+  const maxCost = Math.round(estimatedCost * 1.3);
+  const costRange = `$${minCost} - $${maxCost}`;
+  
+  return {
+    monthlyMinutes,
+    estimatedCost,
+    costRange,
+    provider,
+    tier,
+  };
+}
 
 const projectTypes = [
   { value: "nodejs", label: "Node.js", icon: IconBrandNodejs },
@@ -168,6 +480,191 @@ export function PipelineGenerator() {
   const [output, setOutput] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [savedConfigs, setSavedConfigs] = useState<Record<string, PipelineConfig>>({});
+  const [currentConfigName, setCurrentConfigName] = useState<string>("");
+  const [history, setHistory] = useState<PipelineConfig[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const suggestions = analyzeBestPractices(config);
+  const costEstimate = estimatePipelineCost(config);
+
+  // Load saved configs from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('pipeline-forge-configs');
+    if (saved) {
+      try {
+        setSavedConfigs(JSON.parse(saved));
+      } catch (e) {
+        console.error('Failed to load saved configs:', e);
+      }
+    }
+    // Initialize history with default config
+    setHistory([config]);
+    setHistoryIndex(0);
+  }, []);
+
+  // Auto-save current config to localStorage
+  useEffect(() => {
+    if (currentConfigName) {
+      const updated = { ...savedConfigs, [currentConfigName]: config };
+      setSavedConfigs(updated);
+      localStorage.setItem('pipeline-forge-configs', JSON.stringify(updated));
+    }
+  }, [config, currentConfigName]);
+
+  const handleSaveConfig = useCallback(() => {
+    const name = prompt('Enter a name for this configuration:', currentConfigName || 'my-config');
+    if (name) {
+      const updated = { ...savedConfigs, [name]: config };
+      setSavedConfigs(updated);
+      localStorage.setItem('pipeline-forge-configs', JSON.stringify(updated));
+      setCurrentConfigName(name);
+    }
+  }, [config, savedConfigs, currentConfigName]);
+
+  const handleLoadConfig = useCallback((name: string) => {
+    const loaded = savedConfigs[name];
+    if (loaded) {
+      setConfig(loaded);
+      setCurrentConfigName(name);
+    }
+  }, [savedConfigs]);
+
+  const handleDeleteConfig = useCallback((name: string) => {
+    if (confirm(`Delete configuration "${name}"?`)) {
+      const updated = { ...savedConfigs };
+      delete updated[name];
+      setSavedConfigs(updated);
+      localStorage.setItem('pipeline-forge-configs', JSON.stringify(updated));
+      if (currentConfigName === name) {
+        setCurrentConfigName('');
+      }
+    }
+  }, [savedConfigs, currentConfigName]);
+
+  const handleResetConfig = useCallback(() => {
+    if (confirm('Reset to default configuration?')) {
+      setConfig({
+        projectName: "my-app",
+        projectType: "nodejs",
+        ciProvider: "github-actions",
+        nodeVersion: "20",
+        packageManager: "npm",
+        isMonorepo: false,
+        monorepoTool: "none",
+        workingDirectory: ".",
+        enableDocker: false,
+        dockerImageName: "",
+        enableTests: true,
+        enableLinting: true,
+        enableBuild: true,
+        deployTarget: "none",
+        branches: ["main"],
+        enableCaching: true,
+        enableSecurityScan: false,
+        enableE2ETesting: false,
+        enableCodeFormatting: false,
+        enableTypeChecking: false,
+        enableDependencyAudit: false,
+        enableContainerScan: false,
+        enableSonarQube: false,
+        ciSettings: {
+          concurrency: 1,
+          timeout: 60,
+          retryOnFailure: false,
+          parallelJobs: false,
+        },
+        environmentVariables: [],
+        customScripts: {},
+        notifications: {
+          enabled: false,
+          slack: { enabled: false },
+          email: { enabled: false },
+        },
+        matrixBuild: {
+          enabled: false,
+          versions: [],
+        },
+        artifacts: {
+          enabled: false,
+          paths: [],
+          retention: 30,
+        },
+        schedule: {
+          enabled: false,
+          cron: "",
+          timezone: "UTC",
+        },
+        codeQuality: {
+          enabled: false,
+          coverageThreshold: 80,
+          qualityGate: false,
+        },
+        performance: {
+          enabled: false,
+          loadTesting: false,
+          benchmarks: false,
+        },
+        services: {
+          enabled: false,
+          database: {
+            enabled: false,
+            type: "postgresql",
+            migrations: false,
+          },
+          redis: false,
+          elasticsearch: false,
+        },
+      });
+      setCurrentConfigName('');
+      setOutput('');
+    }
+  }, []);
+
+  const handleApplyPreset = useCallback((presetKey: string) => {
+    const preset = presets[presetKey];
+    if (preset && confirm(`Apply preset "${presetLabels[presetKey].label}"? This will replace your current configuration.`)) {
+      setConfig(prev => ({ ...prev, ...preset }));
+      setCurrentConfigName('');
+      setOutput('');
+    }
+  }, []);
+
+  const handleExportConfig = useCallback(() => {
+    const configJson = JSON.stringify(config, null, 2);
+    const blob = new Blob([configJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${config.projectName}-pipeline-config.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [config]);
+
+  const handleImportConfig = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imported = JSON.parse(event.target?.result as string);
+            if (confirm('Import this configuration? This will replace your current configuration.')) {
+              setConfig(imported);
+              setCurrentConfigName('');
+              setOutput('');
+            }
+          } catch (err) {
+            alert('Failed to parse JSON file. Please ensure it is a valid configuration.');
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  }, []);
 
   // Update package manager default when project type changes
   useEffect(() => {
@@ -218,16 +715,247 @@ export function PipelineGenerator() {
     key: K,
     value: PipelineConfig[K]
   ) => {
-    setConfig((prev) => ({ ...prev, [key]: value }));
+    const newConfig = { ...config, [key]: value };
+    setConfig(newConfig);
+    
+    // Add to history (debounced to avoid too many entries)
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newConfig);
+    // Limit history to 50 entries
+    if (newHistory.length > 50) {
+      newHistory.shift();
+    }
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
   };
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setConfig(history[newIndex]);
+    }
+  }, [history, historyIndex]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setConfig(history[newIndex]);
+    }
+  }, [history, historyIndex]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
       {/* Configuration Panel */}
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-3 sm:space-y-6">
+        {/* Cost Estimation */}
+        <Card>
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <IconCurrencyDollar className="h-4 w-4 sm:h-5 sm:w-5" />
+              Cost Estimation
+            </CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Estimated monthly CI/CD costs</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div>
+                  <div className="text-xs text-muted-foreground">Provider</div>
+                  <div className="text-sm font-semibold">{costEstimate.provider}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-muted-foreground">Tier</div>
+                  <div className="text-sm font-semibold">{costEstimate.tier}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="text-xs text-muted-foreground">Monthly Minutes</div>
+                  <div className="text-lg font-bold">{costEstimate.monthlyMinutes}</div>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="text-xs text-muted-foreground">Est. Cost</div>
+                  <div className="text-lg font-bold text-green-600">${costEstimate.estimatedCost}</div>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground text-center">
+                Based on ~50 runs/month • Range: {costEstimate.costRange}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Best Practices Suggestions */}
+        {suggestions.length > 0 && (
+          <Card className={suggestions.some(s => s.type === 'warning') ? 'border-orange-200 dark:border-orange-900' : ''}>
+            <CardHeader className="pb-2 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                <IconInfoCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                Best Practices
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Recommendations for your pipeline</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6">
+              {suggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className={`flex items-start gap-2 p-2 rounded-lg ${
+                    suggestion.type === 'warning'
+                      ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-800 dark:text-orange-200'
+                      : suggestion.type === 'success'
+                      ? 'bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-200'
+                      : 'bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200'
+                  }`}
+                >
+                  {suggestion.type === 'warning' && (
+                    <IconAlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  )}
+                  {suggestion.type === 'success' && (
+                    <IconCheck className="h-4 w-4 shrink-0 mt-0.5" />
+                  )}
+                  {suggestion.type === 'info' && (
+                    <IconInfoCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  )}
+                  <span className="text-xs sm:text-sm">{suggestion.message}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Presets */}
+        <Card>
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <IconTemplate className="h-4 w-4 sm:h-5 sm:w-5" />
+              Quick Presets
+            </CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Start with a pre-configured template</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {Object.entries(presetLabels).map(([key, { label, description, icon: Icon }]) => (
+                <button
+                  key={key}
+                  onClick={() => handleApplyPreset(key)}
+                  className="flex items-start gap-3 p-3 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                >
+                  <Icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold">{label}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{description}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Saved Configurations */}
+        <Card>
+          <CardHeader className="pb-2 sm:pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base sm:text-lg">Saved Configurations</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">Save and load your pipeline configurations</CardDescription>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveConfig}
+                  className="gap-1.5 text-xs"
+                >
+                  <IconDeviceFloppy className="h-3.5 w-3.5" />
+                  Save
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetConfig}
+                  className="gap-1.5 text-xs"
+                >
+                  <IconRotate className="h-3.5 w-3.5" />
+                  Reset
+                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleUndo}
+                    disabled={historyIndex <= 0}
+                    className="gap-1.5 text-xs hidden sm:flex"
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <IconArrowBackUp className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRedo}
+                    disabled={historyIndex >= history.length - 1}
+                    className="gap-1.5 text-xs hidden sm:flex"
+                    title="Redo (Ctrl+Y)"
+                  >
+                    <IconArrowForwardUp className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportConfig}
+                  className="gap-1.5 text-xs hidden sm:flex"
+                >
+                  <IconDownload className="h-3.5 w-3.5" />
+                  Export JSON
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleImportConfig}
+                  className="gap-1.5 text-xs hidden sm:flex"
+                >
+                  <IconUpload className="h-3.5 w-3.5" />
+                  Import JSON
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          {Object.keys(savedConfigs).length > 0 && (
+            <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6">
+              {Object.entries(savedConfigs).map(([name, cfg]) => (
+                <div key={name} className="flex items-center justify-between gap-2 p-2 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
+                  <button
+                    onClick={() => handleLoadConfig(name)}
+                    className="flex items-center gap-2 flex-1 text-left"
+                  >
+                    <IconCode className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{name}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {cfg.projectType} · {cfg.ciProvider}
+                      </div>
+                    </div>
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteConfig(name)}
+                    className="h-8 w-8 p-0 shrink-0"
+                  >
+                    <IconTrash className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          )}
+        </Card>
+
         {/* Project Name */}
         <Card>
-          <CardHeader className="pb-3 sm:pb-4">
+          <CardHeader className="pb-2 sm:pb-4">
             <CardTitle className="text-base sm:text-lg">Project Details</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Name your project and select the stack</CardDescription>
           </CardHeader>
@@ -383,7 +1111,7 @@ export function PipelineGenerator() {
 
         {/* CI Provider */}
         <Card>
-          <CardHeader className="pb-3 sm:pb-4">
+          <CardHeader className="pb-2 sm:pb-4">
             <CardTitle className="text-base sm:text-lg">CI/CD Provider</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Choose your pipeline platform and configure settings</CardDescription>
           </CardHeader>
@@ -503,7 +1231,7 @@ export function PipelineGenerator() {
 
         {/* Pipeline Options */}
         <Card>
-          <CardHeader className="pb-3 sm:pb-4">
+          <CardHeader className="pb-2 sm:pb-4">
             <CardTitle className="text-base sm:text-lg">Pipeline Steps</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Configure what your pipeline does</CardDescription>
           </CardHeader>
@@ -566,7 +1294,7 @@ export function PipelineGenerator() {
 
         {/* Deployment */}
         <Card>
-          <CardHeader className="pb-3 sm:pb-4">
+          <CardHeader className="pb-2 sm:pb-4">
             <CardTitle className="text-base sm:text-lg">Deployment</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Where should your app be deployed?</CardDescription>
           </CardHeader>
@@ -646,7 +1374,7 @@ export function PipelineGenerator() {
 
         {/* Advanced Features */}
         <Card>
-          <CardHeader className="pb-3 sm:pb-4">
+          <CardHeader className="pb-2 sm:pb-4">
             <button
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="flex items-center justify-between w-full text-left group"
@@ -670,9 +1398,9 @@ export function PipelineGenerator() {
           </CardHeader>
           
           {showAdvanced && (
-            <CardContent className="space-y-4 sm:space-y-5">
+            <CardContent className="space-y-3 sm:space-y-5">
               {/* Environment Variables */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-semibold flex items-center gap-2">
                     <IconVariable className="h-4 w-4" />
@@ -737,7 +1465,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Custom Scripts */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <Label className="text-sm font-semibold flex items-center gap-2">
                   <IconTerminal className="h-4 w-4" />
                   Custom Scripts
@@ -791,7 +1519,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Notifications */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="notifications"
@@ -893,7 +1621,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Matrix Build */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="matrixBuild"
@@ -934,7 +1662,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Artifacts */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="artifacts"
@@ -994,7 +1722,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Schedule */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="schedule"
@@ -1060,7 +1788,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Code Quality & Coverage */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="codeQuality"
@@ -1120,7 +1848,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Performance Testing */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="performance"
@@ -1176,7 +1904,7 @@ export function PipelineGenerator() {
               <Separator />
 
               {/* Database & Services */}
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-1.5 sm:space-y-3">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="services"
@@ -1358,9 +2086,10 @@ export function PipelineGenerator() {
           <CardContent>
             {output ? (
               <div className="relative">
-                <pre className="overflow-auto rounded-lg bg-muted/50 border p-3 sm:p-4 text-xs sm:text-sm font-mono leading-relaxed max-h-[50vh] sm:max-h-[60vh] lg:max-h-[70vh]">
-                  <code>{output}</code>
-                </pre>
+                <pre 
+                  className="overflow-auto rounded-lg bg-muted/50 border p-3 sm:p-4 text-xs sm:text-sm font-mono leading-relaxed max-h-[50vh] sm:max-h-[60vh] lg:max-h-[70vh]"
+                  dangerouslySetInnerHTML={{ __html: `<code>${highlightYAML(output)}</code>` }}
+                />
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 p-8 sm:p-12 text-center">

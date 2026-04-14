@@ -5,18 +5,18 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function Creator() {
   return (
-    <section id="creator" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-muted/30">
+    <section id="creator" className="py-6 sm:py-8 md:py-12 lg:py-16 bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-6 sm:mb-8 md:mb-12">
-          <Badge variant="secondary" className="mb-2 sm:mb-4">Meet the Creator</Badge>
+        <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <Badge variant="secondary" className="mb-2 sm:mb-3">Meet the Creator</Badge>
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
             Built by a passionate engineer
           </h2>
         </div>
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl md:max-w-3xl lg:max-w-4xl">
           <Card className="overflow-hidden">
-            <CardContent className="p-4 sm:p-8 md:p-12">
-              <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6">
+            <CardContent className="p-3 sm:p-6 md:p-8">
+              <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-2xl" />
                   <img

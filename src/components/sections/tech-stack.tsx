@@ -10,10 +10,10 @@ export function TechStack() {
   ];
 
   return (
-    <section className="py-12 sm:py-16 md:py-20 lg:py-28">
+    <section className="py-6 sm:py-8 md:py-12 lg:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 sm:mb-12 md:mb-16">
-          <Badge variant="secondary" className="mb-4">Tech Stack</Badge>
+        <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <Badge variant="secondary" className="mb-2 sm:mb-3">Tech Stack</Badge>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
             Built with modern tools
           </h2>

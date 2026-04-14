@@ -3,10 +3,10 @@ import { PipelineGenerator } from "@/components/pipeline-generator";
 
 export function Generator() {
   return (
-    <section id="generator" className="py-12 sm:py-16 md:py-20 lg:py-28 bg-muted/30">
+    <section id="generator" className="py-6 sm:py-8 md:py-12 lg:py-16 bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 sm:mb-12">
-          <Badge variant="secondary" className="mb-4">Generator</Badge>
+        <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <Badge variant="secondary" className="mb-2 sm:mb-3">Generator</Badge>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             Build your pipeline
           </h2>

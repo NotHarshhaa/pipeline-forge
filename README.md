@@ -63,6 +63,16 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
 * 🚀 **Performance Testing** — Load testing and performance benchmarks
 * 🗄️ **Database & Services** — Configure PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch
 
+### UX Enhancements
+* 💾 **Configuration Persistence** — Save and load your configurations with local storage
+* 🎨 **Syntax Highlighting** — Color-coded YAML output for better readability
+* 📋 **Quick Presets** — Pre-configured templates for common use cases (Basic, Production, Docker/K8s, etc.)
+* 📤 **Export/Import** — Share configurations as JSON files
+* ↩️ **Undo/Redo** — Navigate through configuration history with ease
+* 💡 **Best Practices Analyzer** — Real-time suggestions for optimal pipeline configuration
+* 💰 **Cost Estimation** — Estimate monthly CI/CD costs based on your configuration
+* 📱 **Responsive Design** — Fully responsive UI optimized for mobile and desktop
+
 ---
 
 ## 🖥️ **Demo**
@@ -73,13 +83,17 @@ Visit the live site: **[Pipeline Forge](http://localhost:3000)** (when running l
 
 ## 🧠 **How It Works**
 
-1. **Configure project details** (name, type, package manager, monorepo settings)
-2. **Choose your CI/CD provider** (GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines)
-3. **Configure pipeline settings** (concurrency, timeout, retry logic, parallel jobs)
-4. **Select pipeline steps** (linting, tests, formatting, security scans, Docker)
-5. **Choose deployment target** (AWS, Kubernetes, Vercel, Netlify, Heroku, Azure, GCP)
-6. **Add advanced features** (environment variables, custom scripts, notifications, matrix builds)
-7. **Generate your pipeline YAML instantly** (copy or download)
+1. **Choose a Quick Preset** — Start with a pre-configured template or build from scratch
+2. **Configure project details** (name, type, package manager, monorepo settings)
+3. **Choose your CI/CD provider** (GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines)
+4. **Configure pipeline settings** (concurrency, timeout, retry logic, parallel jobs)
+5. **Select pipeline steps** (linting, tests, formatting, security scans, Docker)
+6. **Choose deployment target** (AWS, Kubernetes, Vercel, Netlify, Heroku, Azure, GCP)
+7. **Add advanced features** (environment variables, custom scripts, notifications, matrix builds)
+8. **Review best practices** — Get real-time suggestions for optimal configuration
+9. **Check cost estimation** — See estimated monthly CI/CD costs
+10. **Generate your pipeline YAML instantly** — Copy or download with syntax highlighting
+11. **Save your configuration** — Store configs locally for future use or export as JSON
 
 ---
 
@@ -437,13 +451,18 @@ jobs:
 * [x] Environment variables configuration
 * [x] Custom scripts support
 * [x] Notification settings (Slack/Email)
+* [x] Configuration persistence (save/load)
+* [x] YAML syntax highlighting
+* [x] Quick presets for common configurations
+* [x] Configuration export/import (JSON)
+* [x] Undo/redo functionality
+* [x] Best practices analyzer
+* [x] Cost estimation per pipeline
 * [ ] Travis CI support
 * [ ] Bitbucket Pipelines support
 * [ ] Kubernetes deployment templates (advanced)
 * [ ] AI-powered pipeline optimization
 * [ ] Pipeline visualization (graph view)
-* [ ] Cost estimation per pipeline
-* [ ] Template customization and export
 
 ---
 
