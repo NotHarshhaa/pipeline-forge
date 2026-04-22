@@ -45,6 +45,7 @@ import {
   IconSettings,
   IconChevronDown,
   IconChevronUp,
+  IconChevronRight,
   IconBell,
   IconVariable,
   IconTerminal,
@@ -404,6 +405,15 @@ const deployTargets = [
   { value: "gcp", label: "Google Cloud Platform", icon: IconBrandGoogle },
 ] as const;
 
+// Step configuration
+const steps = [
+  { id: 'project', title: 'Project Details', icon: IconSettings },
+  { id: 'provider', title: 'CI/CD Provider', icon: IconBrandGithub },
+  { id: 'pipeline', title: 'Pipeline Steps', icon: IconTerminal },
+  { id: 'deployment', title: 'Deployment', icon: IconCloud },
+  { id: 'advanced', title: 'Advanced Features', icon: IconSettings },
+] as const;
+
 export function PipelineGenerator() {
   const [config, setConfig] = useState<PipelineConfig>({
     projectName: "my-app",
@@ -479,11 +489,12 @@ export function PipelineGenerator() {
   });
   const [output, setOutput] = useState<string>("");
   const [copied, setCopied] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [savedConfigs, setSavedConfigs] = useState<Record<string, PipelineConfig>>({});
   const [currentConfigName, setCurrentConfigName] = useState<string>("");
   const [history, setHistory] = useState<PipelineConfig[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [expandedSteps, setExpandedSteps] = useState<Set<number>>(new Set([0]));
   const suggestions = analyzeBestPractices(config);
   const costEstimate = estimatePipelineCost(config);
 
@@ -745,6 +756,29 @@ export function PipelineGenerator() {
     }
   }, [history, historyIndex]);
 
+  const toggleStep = useCallback((stepIndex: number) => {
+    setExpandedSteps(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(stepIndex)) {
+        newExpanded.delete(stepIndex);
+      } else {
+        newExpanded.add(stepIndex);
+      }
+      return newExpanded;
+    });
+  }, []);
+
+  const goToStep = useCallback((stepIndex: number) => {
+    setCurrentStep(stepIndex);
+    setExpandedSteps(prev => new Set([stepIndex]));
+  }, []);
+
+  const completeStep = useCallback((stepIndex: number) => {
+    if (stepIndex < steps.length - 1) {
+      goToStep(stepIndex + 1);
+    }
+  }, [goToStep]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
       {/* Configuration Panel */}
@@ -953,13 +987,94 @@ export function PipelineGenerator() {
           )}
         </Card>
 
-        {/* Project Name */}
+        {/* Progress Indicator */}
         <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs sm:text-sm font-semibold text-muted-foreground">Progress</span>
+              <span className="text-xs sm:text-sm font-semibold">{currentStep + 1} of {steps.length}</span>
+            </div>
+            <div className="flex gap-1">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                const isCompleted = index < currentStep;
+                const isCurrent = index === currentStep;
+                const isExpanded = expandedSteps.has(index);
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => goToStep(index)}
+                    className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+                      isCurrent
+                        ? 'bg-primary/10 border-2 border-primary'
+                        : isCompleted
+                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-500/50 dark:border-emerald-500/70'
+                        : 'bg-muted/30 border-2 border-border hover:border-border/80'
+                    }`}
+                  >
+                    <div className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full transition-all ${
+                      isCurrent
+                        ? 'bg-primary text-primary-foreground'
+                        : isCompleted
+                        ? 'bg-emerald-600 text-white dark:bg-emerald-500'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {isCompleted ? (
+                        <IconCheck className="h-3 w-3 sm:h-4 sm:w-4" />
+                      ) : (
+                        <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+                      )}
+                    </div>
+                    <span className={`text-[10px] sm:text-xs font-medium hidden sm:block ${
+                      isCurrent ? 'text-primary' : isCompleted ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground'
+                    }`}>
+                      {step.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Project Details */}
+        <Card className={expandedSteps.has(0) ? (currentStep > 0 ? 'border-emerald-500/50 dark:border-emerald-500/70' : 'border-primary') : ''}>
           <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg">Project Details</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Name your project and select the stack</CardDescription>
+            <button
+              onClick={() => toggleStep(0)}
+              className="flex items-center justify-between w-full text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all ${
+                  currentStep === 0
+                    ? 'bg-primary text-primary-foreground'
+                    : currentStep > 0
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {currentStep > 0 ? (
+                    <IconCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <span className="text-sm font-semibold">1</span>
+                  )}
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    Project Details
+                    {currentStep > 0 && <Badge variant="secondary" className="text-[10px]">Completed</Badge>}
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Name your project and select the stack</CardDescription>
+                </div>
+              </div>
+              {expandedSteps.has(0) ? (
+                <IconChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <IconChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
           </CardHeader>
-          <CardContent className="space-y-3 sm:space-y-4">
+          {expandedSteps.has(0) && (
+            <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="project-name" className="text-sm">Project Name</Label>
               <input
@@ -1106,16 +1221,58 @@ export function PipelineGenerator() {
                 </div>
               )}
             </div>
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => completeStep(0)}
+                size="sm"
+                className="gap-2"
+              >
+                Next
+                <IconChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
+          )}
         </Card>
 
         {/* CI Provider */}
-        <Card>
+        <Card className={expandedSteps.has(1) ? (currentStep > 1 ? 'border-emerald-500/50 dark:border-emerald-500/70' : 'border-primary') : ''}>
           <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg">CI/CD Provider</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Choose your pipeline platform and configure settings</CardDescription>
+            <button
+              onClick={() => toggleStep(1)}
+              className="flex items-center justify-between w-full text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all ${
+                  currentStep === 1
+                    ? 'bg-primary text-primary-foreground'
+                    : currentStep > 1
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {currentStep > 1 ? (
+                    <IconCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <span className="text-sm font-semibold">2</span>
+                  )}
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    CI/CD Provider
+                    {currentStep > 1 && <Badge variant="secondary" className="text-[10px]">Completed</Badge>}
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Choose your pipeline platform and configure settings</CardDescription>
+                </div>
+              </div>
+              {expandedSteps.has(1) ? (
+                <IconChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <IconChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
           </CardHeader>
-          <CardContent className="space-y-3 sm:space-y-4">
+          {expandedSteps.has(1) && (
+            <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-sm">Provider</Label>
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
@@ -1226,16 +1383,58 @@ export function PipelineGenerator() {
                 </div>
               </div>
             </div>
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => completeStep(1)}
+                size="sm"
+                className="gap-2"
+              >
+                Next
+                <IconChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
+          )}
         </Card>
 
-        {/* Pipeline Options */}
-        <Card>
+        {/* Pipeline Steps */}
+        <Card className={expandedSteps.has(2) ? (currentStep > 2 ? 'border-emerald-500/50 dark:border-emerald-500/70' : 'border-primary') : ''}>
           <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg">Pipeline Steps</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Configure what your pipeline does</CardDescription>
+            <button
+              onClick={() => toggleStep(2)}
+              className="flex items-center justify-between w-full text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all ${
+                  currentStep === 2
+                    ? 'bg-primary text-primary-foreground'
+                    : currentStep > 2
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {currentStep > 2 ? (
+                    <IconCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <span className="text-sm font-semibold">3</span>
+                  )}
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    Pipeline Steps
+                    {currentStep > 2 && <Badge variant="secondary" className="text-[10px]">Completed</Badge>}
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Configure what your pipeline does</CardDescription>
+                </div>
+              </div>
+              {expandedSteps.has(2) ? (
+                <IconChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <IconChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
           </CardHeader>
-          <CardContent className="space-y-3 sm:space-y-4">
+          {expandedSteps.has(2) && (
+            <CardContent className="space-y-3 sm:space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
               {[
                 { key: "enableLinting" as const, label: "Linting" },
@@ -1289,16 +1488,58 @@ export function PipelineGenerator() {
                 </div>
               </>
             )}
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => completeStep(2)}
+                size="sm"
+                className="gap-2"
+              >
+                Next
+                <IconChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
+          )}
         </Card>
 
         {/* Deployment */}
-        <Card>
+        <Card className={expandedSteps.has(3) ? (currentStep > 3 ? 'border-emerald-500/50 dark:border-emerald-500/70' : 'border-primary') : ''}>
           <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle className="text-base sm:text-lg">Deployment</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Where should your app be deployed?</CardDescription>
+            <button
+              onClick={() => toggleStep(3)}
+              className="flex items-center justify-between w-full text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all ${
+                  currentStep === 3
+                    ? 'bg-primary text-primary-foreground'
+                    : currentStep > 3
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {currentStep > 3 ? (
+                    <IconCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <span className="text-sm font-semibold">4</span>
+                  )}
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    Deployment
+                    {currentStep > 3 && <Badge variant="secondary" className="text-[10px]">Completed</Badge>}
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Where should your app be deployed?</CardDescription>
+                </div>
+              </div>
+              {expandedSteps.has(3) ? (
+                <IconChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              ) : (
+                <IconChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              )}
+            </button>
           </CardHeader>
-          <CardContent className="space-y-3 sm:space-y-4">
+          {expandedSteps.has(3) && (
+            <CardContent className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label className="text-sm">Deployment Target</Label>
               <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
@@ -1369,35 +1610,60 @@ export function PipelineGenerator() {
                 </div>
               </>
             )}
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={() => completeStep(3)}
+                size="sm"
+                className="gap-2"
+              >
+                Next
+                <IconChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
+          )}
         </Card>
 
         {/* Advanced Features */}
-        <Card>
+        <Card className={expandedSteps.has(4) ? (currentStep > 4 ? 'border-emerald-500/50 dark:border-emerald-500/70' : 'border-primary') : ''}>
           <CardHeader className="pb-2 sm:pb-4">
             <button
-              onClick={() => setShowAdvanced(!showAdvanced)}
+              onClick={() => toggleStep(4)}
               className="flex items-center justify-between w-full text-left group"
             >
-              <div>
-                <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                  <IconSettings className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Advanced Features
-                  <Badge variant="secondary" className="text-[10px] sm:text-xs">New</Badge>
-                </CardTitle>
-                <CardDescription className="text-xs sm:text-sm mt-1">
-                  Environment variables, custom scripts, and notifications
-                </CardDescription>
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all ${
+                  currentStep === 4
+                    ? 'bg-primary text-primary-foreground'
+                    : currentStep > 4
+                    ? 'bg-emerald-600 text-white dark:bg-emerald-500'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {currentStep > 4 ? (
+                    <IconCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <span className="text-sm font-semibold">5</span>
+                  )}
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    Advanced Features
+                    <Badge variant="secondary" className="text-[10px] sm:text-xs">Optional</Badge>
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm mt-1">
+                    Environment variables, custom scripts, and notifications
+                  </CardDescription>
+                </div>
               </div>
-              {showAdvanced ? (
+              {expandedSteps.has(4) ? (
                 <IconChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
               ) : (
                 <IconChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
               )}
             </button>
           </CardHeader>
-          
-          {showAdvanced && (
+
+          {expandedSteps.has(4) && (
             <CardContent className="space-y-3 sm:space-y-5">
               {/* Environment Variables */}
               <div className="space-y-1.5 sm:space-y-3">
@@ -2020,6 +2286,19 @@ export function PipelineGenerator() {
                   </div>
                 )}
               </div>
+              <div className="flex justify-end pt-2">
+                <Button
+                  onClick={() => {
+                    setExpandedSteps(prev => new Set([...prev, 4]));
+                    setCurrentStep(4);
+                  }}
+                  size="sm"
+                  className="gap-2"
+                >
+                  Done
+                  <IconCheck className="h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           )}
         </Card>
@@ -2086,8 +2365,8 @@ export function PipelineGenerator() {
           <CardContent>
             {output ? (
               <div className="relative">
-                <pre 
-                  className="overflow-auto rounded-lg bg-muted/50 border p-3 sm:p-4 text-xs sm:text-sm font-mono leading-relaxed max-h-[50vh] sm:max-h-[60vh] lg:max-h-[70vh]"
+                <pre
+                  className="code-scrollbar overflow-auto rounded-lg bg-muted/50 border p-3 sm:p-4 text-xs sm:text-sm font-mono leading-relaxed max-h-[50vh] sm:max-h-[60vh] lg:max-h-[70vh]"
                   dangerouslySetInnerHTML={{ __html: `<code>${highlightYAML(output)}</code>` }}
                 />
               </div>
