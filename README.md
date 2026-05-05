@@ -51,6 +51,10 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
 * 🟣 **Heroku** — Deploy to Heroku with Git-based deployment
 * 🔷 **Azure App Service** — Deploy to Azure with CI/CD integration
 * 🌩️ **Google Cloud Platform** — Deploy to GCP with Cloud Run
+* ✈️ **Fly.io** — Deploy to Fly.io with global edge deployment
+* 🚂 **Railway** — Deploy to Railway with automatic scaling
+* 🌫️ **Cloudflare Pages** — Deploy to Cloudflare Pages with global CDN
+* 🌊 **DigitalOcean** — Deploy to DigitalOcean App Platform
 
 ### Advanced Features
 * ⚙️ **Environment Variables** — Add custom env vars to your pipelines
@@ -62,6 +66,12 @@ Pipeline Forge is a developer-first tool that helps you create optimized, secure
 * 📊 **Code Quality & Coverage** — Set coverage thresholds and quality gates
 * 🚀 **Performance Testing** — Load testing and performance benchmarks
 * 🗄️ **Database & Services** — Configure PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch
+* 🌍 **Multi-Environment Deployment** — Configure dev/staging/prod environments with branch mapping
+* 🎯 **Deployment Strategies** — Rolling, Blue-Green, Canary, and Recreate deployment patterns
+* 🤖 **Custom Marketplace Actions** — Integrate custom GitHub Actions from the marketplace
+* ⚡ **Pipeline Optimization** — Parallel test execution, dependency caching, Docker BuildKit
+* 🔀 **Conditional Execution** — Run steps based on branches, file changes, or custom conditions
+* ✅ **YAML Validation** — Validate generated pipelines for syntax and best practices
 
 ### UX Enhancements
 * 💾 **Configuration Persistence** — Save and load your configurations with local storage

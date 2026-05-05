@@ -16,7 +16,7 @@ export interface PipelineConfig {
   enableTests: boolean;
   enableLinting: boolean;
   enableBuild: boolean;
-  deployTarget: "none" | "aws" | "kubernetes" | "vercel" | "netlify" | "heroku" | "azure" | "gcp";
+  deployTarget: "none" | "aws" | "kubernetes" | "vercel" | "netlify" | "heroku" | "azure" | "gcp" | "fly-io" | "railway" | "cloudflare-pages" | "digitalocean";
   branches: string[];
   enableCaching: boolean;
   enableSecurityScan: boolean;
@@ -86,6 +86,42 @@ export interface PipelineConfig {
     };
     redis?: boolean;
     elasticsearch?: boolean;
+  };
+  // Conditional execution
+  conditionalSteps?: {
+    enabled: boolean;
+    rules?: Array<{
+      step: string;
+      condition: 'branch' | 'path' | 'event' | 'custom';
+      value: string;
+    }>;
+  };
+  // Multi-environment support
+  environments?: {
+    enabled: boolean;
+    stages?: Array<{
+      name: string;
+      branch: string;
+      autoDeploy: boolean;
+      requireApproval: boolean;
+    }>;
+  };
+  // Deployment strategies
+  deploymentStrategy?: 'rolling' | 'blue-green' | 'canary' | 'recreate';
+  // Custom marketplace actions
+  customActions?: Array<{
+    name: string;
+    uses: string;
+    with?: Record<string, string>;
+    runAfter?: string;
+  }>;
+  // Pipeline optimization
+  optimization?: {
+    enabled: boolean;
+    parallelizeTests: boolean;
+    splitTests: boolean;
+    cacheDependencies: boolean;
+    useBuildKit: boolean;
   };
 }
 

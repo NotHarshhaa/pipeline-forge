@@ -157,6 +157,26 @@ export function generateAzurePipelines(c: PipelineConfig): string {
       lines.push("                    kubernetesServiceEndpoint: 'K8s-Connection'");
       lines.push("                    command: 'rollout'");
       lines.push("                    arguments: 'status deployment/$(K8S_DEPLOYMENT)'");
+    } else if (c.deployTarget === "fly-io") {
+      lines.push("                - script: |");
+      lines.push("                    curl -L https://fly.io/install.sh | sh");
+      lines.push("                    /root/.fly/bin/flyctl deploy --remote-only");
+      lines.push("                  displayName: 'Deploy to Fly.io'");
+    } else if (c.deployTarget === "railway") {
+      lines.push("                - script: |");
+      lines.push("                    npm install -g @railway/cli");
+      lines.push("                    railway deploy --service $(RAILWAY_SERVICE_ID)");
+      lines.push("                  displayName: 'Deploy to Railway'");
+    } else if (c.deployTarget === "cloudflare-pages") {
+      lines.push("                - script: |");
+      lines.push("                    npm install -g wrangler");
+      lines.push(`                    wrangler pages deploy dist --project-name=${c.projectName}`);
+      lines.push("                  displayName: 'Deploy to Cloudflare Pages'");
+    } else if (c.deployTarget === "digitalocean") {
+      lines.push("                - script: |");
+      lines.push("                    curl -sSL https://cli.digitalocean.com/install.sh | sh");
+      lines.push(`                    doctl apps create-deployment ${c.projectName}`);
+      lines.push("                  displayName: 'Deploy to DigitalOcean'");
     }
   }
 
@@ -353,26 +373,50 @@ function getAzureTestSteps(c: PipelineConfig, depth: number): string[] {
 
   lines.push(`${indent(depth)}- script: |`);
 
-  switch (c.projectType) {
-    case "nodejs":
-      lines.push(`${indent(depth)}    npm test`);
-      break;
-    case "python":
-      lines.push(`${indent(depth)}    pip install pytest`);
-      lines.push(`${indent(depth)}    pytest`);
-      break;
-    case "java":
-      lines.push(`${indent(depth)}    mvn test`);
-      break;
-    case "go":
-      lines.push(`${indent(depth)}    go test ./...`);
-      break;
-    case "rust":
-      lines.push(`${indent(depth)}    cargo test`);
-      break;
-    case "dotnet":
-      lines.push(`${indent(depth)}    dotnet test`);
-      break;
+  if (c.optimization?.enabled && c.optimization.parallelizeTests) {
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth)}    npx jest --maxWorkers=4`);
+        break;
+      case "python":
+        lines.push(`${indent(depth)}    pip install pytest-xdist`);
+        lines.push(`${indent(depth)}    pytest -n auto`);
+        break;
+      case "java":
+        lines.push(`${indent(depth)}    mvn test -T 4`);
+        break;
+      case "go":
+        lines.push(`${indent(depth)}    go test -parallel 4 ./...`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth)}    cargo test --jobs 4`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth)}    dotnet test --parallel`);
+        break;
+    }
+  } else {
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth)}    npm test`);
+        break;
+      case "python":
+        lines.push(`${indent(depth)}    pip install pytest`);
+        lines.push(`${indent(depth)}    pytest`);
+        break;
+      case "java":
+        lines.push(`${indent(depth)}    mvn test`);
+        break;
+      case "go":
+        lines.push(`${indent(depth)}    go test ./...`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth)}    cargo test`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth)}    dotnet test`);
+        break;
+    }
   }
 
   lines.push(`${indent(depth)}  displayName: 'Run tests'`);

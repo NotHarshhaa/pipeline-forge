@@ -130,6 +130,30 @@ export function generateCircleCI(c: PipelineConfig): string {
       lines.push(`${indent(4)}command: |`);
       lines.push(`${indent(5)}kubectl apply -f k8s/`);
       lines.push(`${indent(5)}kubectl rollout status deployment/\${K8S_DEPLOYMENT}`);
+    } else if (c.deployTarget === "fly-io") {
+      lines.push(`${indent(3)}- run:`);
+      lines.push(`${indent(4)}name: Deploy to Fly.io`);
+      lines.push(`${indent(4)}command: |`);
+      lines.push(`${indent(5)}curl -L https://fly.io/install.sh | sh`);
+      lines.push(`${indent(5)}/root/.fly/bin/flyctl deploy --remote-only`);
+    } else if (c.deployTarget === "railway") {
+      lines.push(`${indent(3)}- run:`);
+      lines.push(`${indent(4)}name: Deploy to Railway`);
+      lines.push(`${indent(4)}command: |`);
+      lines.push(`${indent(5)}npm install -g @railway/cli`);
+      lines.push(`${indent(5)}railway deploy --service \${RAILWAY_SERVICE_ID}`);
+    } else if (c.deployTarget === "cloudflare-pages") {
+      lines.push(`${indent(3)}- run:`);
+      lines.push(`${indent(4)}name: Deploy to Cloudflare Pages`);
+      lines.push(`${indent(4)}command: |`);
+      lines.push(`${indent(5)}npm install -g wrangler`);
+      lines.push(`${indent(5)}wrangler pages deploy dist --project-name=${c.projectName}`);
+    } else if (c.deployTarget === "digitalocean") {
+      lines.push(`${indent(3)}- run:`);
+      lines.push(`${indent(4)}name: Deploy to DigitalOcean`);
+      lines.push(`${indent(4)}command: |`);
+      lines.push(`${indent(5)}curl -sSL https://cli.digitalocean.com/install.sh | sh`);
+      lines.push(`${indent(5)}doctl apps create-deployment ${c.projectName}`);
     }
   }
 
@@ -338,26 +362,50 @@ function getCircleCITestSteps(c: PipelineConfig, depth: number): string[] {
   lines.push(`${indent(depth + 1)}name: Run tests`);
   lines.push(`${indent(depth + 1)}command: |`);
 
-  switch (c.projectType) {
-    case "nodejs":
-      lines.push(`${indent(depth + 2)}npm test`);
-      break;
-    case "python":
-      lines.push(`${indent(depth + 2)}pip install pytest`);
-      lines.push(`${indent(depth + 2)}pytest`);
-      break;
-    case "java":
-      lines.push(`${indent(depth + 2)}mvn test`);
-      break;
-    case "go":
-      lines.push(`${indent(depth + 2)}go test ./...`);
-      break;
-    case "rust":
-      lines.push(`${indent(depth + 2)}cargo test`);
-      break;
-    case "dotnet":
-      lines.push(`${indent(depth + 2)}dotnet test`);
-      break;
+  if (c.optimization?.enabled && c.optimization.parallelizeTests) {
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth + 2)}npx jest --maxWorkers=4`);
+        break;
+      case "python":
+        lines.push(`${indent(depth + 2)}pip install pytest-xdist`);
+        lines.push(`${indent(depth + 2)}pytest -n auto`);
+        break;
+      case "java":
+        lines.push(`${indent(depth + 2)}mvn test -T 4`);
+        break;
+      case "go":
+        lines.push(`${indent(depth + 2)}go test -parallel 4 ./...`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth + 2)}cargo test --jobs 4`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth + 2)}dotnet test --parallel`);
+        break;
+    }
+  } else {
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth + 2)}npm test`);
+        break;
+      case "python":
+        lines.push(`${indent(depth + 2)}pip install pytest`);
+        lines.push(`${indent(depth + 2)}pytest`);
+        break;
+      case "java":
+        lines.push(`${indent(depth + 2)}mvn test`);
+        break;
+      case "go":
+        lines.push(`${indent(depth + 2)}go test ./...`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth + 2)}cargo test`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth + 2)}dotnet test`);
+        break;
+    }
   }
 
   return lines;

@@ -50,7 +50,7 @@ const features = [
   {
     icon: IconCloud,
     title: "Deployment Ready",
-    description: "AWS ECS and Kubernetes deployment configs included.",
+    description: "AWS ECS, Kubernetes, Vercel, Netlify, Fly.io, Railway, Cloudflare Pages, DigitalOcean.",
   },
   {
     icon: IconShieldLock,
@@ -101,6 +101,36 @@ const features = [
     icon: IconDatabase,
     title: "Database & Services",
     description: "Configure databases, Redis, and Elasticsearch services.",
+  },
+  {
+    icon: IconGitBranch,
+    title: "Multi-Environment Deployment",
+    description: "Configure dev/staging/prod environments with branch mapping.",
+  },
+  {
+    icon: IconSettings,
+    title: "Deployment Strategies",
+    description: "Rolling, Blue-Green, Canary, and Recreate deployment patterns.",
+  },
+  {
+    icon: IconPackage,
+    title: "Custom Marketplace Actions",
+    description: "Integrate custom GitHub Actions from the marketplace.",
+  },
+  {
+    icon: IconBolt,
+    title: "Pipeline Optimization",
+    description: "Parallel test execution, dependency caching, Docker BuildKit.",
+  },
+  {
+    icon: IconGitBranch,
+    title: "Conditional Execution",
+    description: "Run steps based on branches, file changes, or custom conditions.",
+  },
+  {
+    icon: IconCheck,
+    title: "YAML Validation",
+    description: "Validate generated pipelines for syntax and best practices.",
   },
   {
     icon: IconDeviceFloppy,

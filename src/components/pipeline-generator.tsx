@@ -261,6 +261,51 @@ function analyzeBestPractices(config: PipelineConfig): Suggestion[] {
     });
   }
   
+  // Optimization suggestions
+  if (!config.optimization?.enabled) {
+    suggestions.push({
+      type: 'info',
+      message: 'Enable pipeline optimization to improve build performance'
+    });
+  }
+  
+  if (config.optimization?.enabled && !config.optimization.parallelizeTests && config.enableTests) {
+    suggestions.push({
+      type: 'info',
+      message: 'Parallel test execution can significantly reduce CI time'
+    });
+  }
+  
+  if (config.optimization?.enabled && !config.optimization.cacheDependencies) {
+    suggestions.push({
+      type: 'warning',
+      message: 'Dependency caching is recommended for faster builds'
+    });
+  }
+  
+  if (config.enableDocker && !config.optimization?.useBuildKit) {
+    suggestions.push({
+      type: 'info',
+      message: 'Docker BuildKit can improve build performance and caching'
+    });
+  }
+  
+  // Multi-environment suggestions
+  if (config.deployTarget !== 'none' && !config.environments?.enabled) {
+    suggestions.push({
+      type: 'info',
+      message: 'Consider multi-environment deployment for dev/staging/prod workflows'
+    });
+  }
+  
+  // Deployment strategy suggestions
+  if (config.deployTarget === 'kubernetes' && !config.deploymentStrategy) {
+    suggestions.push({
+      type: 'info',
+      message: 'Choose a deployment strategy (rolling, blue-green, canary) for Kubernetes'
+    });
+  }
+  
   // Deployment checks
   if (config.deployTarget !== 'none' && !config.enableTests) {
     suggestions.push({
@@ -281,6 +326,13 @@ function analyzeBestPractices(config: PipelineConfig): Suggestion[] {
     suggestions.push({
       type: 'success',
       message: 'Quality gates ensure code standards are met'
+    });
+  }
+  
+  if (config.optimization?.enabled && config.optimization.parallelizeTests && config.optimization.cacheDependencies) {
+    suggestions.push({
+      type: 'success',
+      message: 'Excellent! Pipeline optimization is fully configured'
     });
   }
   
@@ -403,6 +455,10 @@ const deployTargets = [
   { value: "heroku", label: "Heroku", icon: IconWorldWww },
   { value: "azure", label: "Azure App Service", icon: IconBrandAzure },
   { value: "gcp", label: "Google Cloud Platform", icon: IconBrandGoogle },
+  { value: "fly-io", label: "Fly.io", icon: IconCloud },
+  { value: "railway", label: "Railway", icon: IconRocket },
+  { value: "cloudflare-pages", label: "Cloudflare Pages", icon: IconCloud },
+  { value: "digitalocean", label: "DigitalOcean", icon: IconServer },
 ] as const;
 
 // Step configuration
@@ -485,6 +541,23 @@ export function PipelineGenerator() {
       },
       redis: false,
       elasticsearch: false,
+    },
+    conditionalSteps: {
+      enabled: false,
+      rules: [],
+    },
+    environments: {
+      enabled: false,
+      stages: [],
+    },
+    deploymentStrategy: "rolling",
+    customActions: [],
+    optimization: {
+      enabled: false,
+      parallelizeTests: false,
+      splitTests: false,
+      cacheDependencies: true,
+      useBuildKit: false,
     },
   });
   const [output, setOutput] = useState<string>("");
@@ -624,6 +697,23 @@ export function PipelineGenerator() {
           },
           redis: false,
           elasticsearch: false,
+        },
+        conditionalSteps: {
+          enabled: false,
+          rules: [],
+        },
+        environments: {
+          enabled: false,
+          stages: [],
+        },
+        deploymentStrategy: "rolling",
+        customActions: [],
+        optimization: {
+          enabled: false,
+          parallelizeTests: false,
+          splitTests: false,
+          cacheDependencies: true,
+          useBuildKit: false,
         },
       });
       setCurrentConfigName('');
@@ -1606,6 +1696,10 @@ export function PipelineGenerator() {
                     {config.deployTarget === "heroku" && "Deploy to Heroku with Git-based deployment"}
                     {config.deployTarget === "azure" && "Deploy to Azure App Service with CI/CD integration"}
                     {config.deployTarget === "gcp" && "Deploy to Google Cloud Platform with Cloud Run"}
+                    {config.deployTarget === "fly-io" && "Deploy to Fly.io with global edge deployment"}
+                    {config.deployTarget === "railway" && "Deploy to Railway with automatic scaling"}
+                    {config.deployTarget === "cloudflare-pages" && "Deploy to Cloudflare Pages with global CDN"}
+                    {config.deployTarget === "digitalocean" && "Deploy to DigitalOcean App Platform"}
                   </p>
                 </div>
               </>
@@ -2286,6 +2380,249 @@ export function PipelineGenerator() {
                   </div>
                 )}
               </div>
+
+              <Separator />
+
+              {/* Deployment Strategy */}
+              {config.deployTarget !== "none" && (
+                <div className="space-y-1.5 sm:space-y-3">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <IconRocket className="h-4 w-4" />
+                    Deployment Strategy
+                  </Label>
+                  <Select
+                    value={config.deploymentStrategy || "rolling"}
+                    onValueChange={(value) =>
+                      updateConfig("deploymentStrategy", value as PipelineConfig["deploymentStrategy"])
+                    }
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper" sideOffset={5}>
+                      <SelectItem value="rolling">Rolling Update (Gradual)</SelectItem>
+                      <SelectItem value="blue-green">Blue-Green (Zero Downtime)</SelectItem>
+                      <SelectItem value="canary">Canary (Gradual Traffic)</SelectItem>
+                      <SelectItem value="recreate">Recreate (Stop & Start)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Multi-Environment Support */}
+              <div className="space-y-1.5 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="environments"
+                    checked={config.environments?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("environments", {
+                        ...config.environments!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="environments" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconCloud className="h-4 w-4" />
+                    Multi-Environment Deployment
+                  </Label>
+                </div>
+                {config.environments?.enabled && (
+                  <div className="ml-6 space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">
+                        Environments (name:branch pairs)
+                      </Label>
+                      <Textarea
+                        placeholder="development:develop&#10;staging:staging&#10;production:main"
+                        value={config.environments?.stages?.map(s => `${s.name}:${s.branch}`).join("\n") || ""}
+                        onChange={(e) => {
+                          const lines = e.target.value.split("\n").filter(Boolean);
+                          const stages = lines.map(line => {
+                            const [name, branch] = line.split(":").map(s => s.trim());
+                            return { name: name || "production", branch: branch || "main", autoDeploy: true, requireApproval: false };
+                          });
+                          updateConfig("environments", {
+                            ...config.environments!,
+                            stages,
+                          });
+                        }}
+                        className="text-xs font-mono min-h-[80px]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Pipeline Optimization */}
+              <div className="space-y-1.5 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="optimization"
+                    checked={config.optimization?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("optimization", {
+                        ...config.optimization!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="optimization" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconSparkles className="h-4 w-4" />
+                    Pipeline Optimization
+                  </Label>
+                </div>
+                {config.optimization?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="parallelizeTests"
+                        checked={config.optimization?.parallelizeTests}
+                        onCheckedChange={(checked) =>
+                          updateConfig("optimization", {
+                            ...config.optimization!,
+                            parallelizeTests: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="parallelizeTests" className="text-xs cursor-pointer">
+                        Parallelize test execution
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="cacheDependencies"
+                        checked={config.optimization?.cacheDependencies}
+                        onCheckedChange={(checked) =>
+                          updateConfig("optimization", {
+                            ...config.optimization!,
+                            cacheDependencies: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="cacheDependencies" className="text-xs cursor-pointer">
+                        Cache dependencies
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="useBuildKit"
+                        checked={config.optimization?.useBuildKit}
+                        onCheckedChange={(checked) =>
+                          updateConfig("optimization", {
+                            ...config.optimization!,
+                            useBuildKit: checked as boolean,
+                          })
+                        }
+                      />
+                      <Label htmlFor="useBuildKit" className="text-xs cursor-pointer">
+                        Use Docker BuildKit (faster builds)
+                      </Label>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Custom Marketplace Actions */}
+              <div className="space-y-1.5 sm:space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <IconPackage className="h-4 w-4" />
+                    Custom Marketplace Actions
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const newActions = [...(config.customActions || []), { name: "", uses: "", with: {} }];
+                      updateConfig("customActions", newActions);
+                    }}
+                    className="h-7 text-xs gap-1"
+                  >
+                    <IconPlus className="h-3 w-3" />
+                    Add Action
+                  </Button>
+                </div>
+                {config.customActions && config.customActions.length > 0 ? (
+                  <div className="space-y-2">
+                    {config.customActions.map((action, index) => (
+                      <div key={index} className="rounded-lg border bg-muted/30 p-2 space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Action name"
+                            value={action.name}
+                            onChange={(e) => {
+                              const newActions = [...config.customActions!];
+                              newActions[index].name = e.target.value;
+                              updateConfig("customActions", newActions);
+                            }}
+                            className="flex-1 h-8 text-xs"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newActions = config.customActions!.filter((_, i) => i !== index);
+                              updateConfig("customActions", newActions);
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <IconTrash className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="uses: username/action@v1"
+                          value={action.uses}
+                          onChange={(e) => {
+                            const newActions = [...config.customActions!];
+                            newActions[index].uses = e.target.value;
+                            updateConfig("customActions", newActions);
+                          }}
+                          className="h-8 text-xs font-mono"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No custom actions added</p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Conditional Execution */}
+              <div className="space-y-1.5 sm:space-y-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="conditionalSteps"
+                    checked={config.conditionalSteps?.enabled}
+                    onCheckedChange={(checked) =>
+                      updateConfig("conditionalSteps", {
+                        ...config.conditionalSteps!,
+                        enabled: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label htmlFor="conditionalSteps" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <IconGitBranch className="h-4 w-4" />
+                    Conditional Step Execution
+                  </Label>
+                </div>
+                {config.conditionalSteps?.enabled && (
+                  <div className="ml-6 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Run steps only when specific conditions are met
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end pt-2">
                 <Button
                   onClick={() => {

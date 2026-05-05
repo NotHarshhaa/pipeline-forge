@@ -190,25 +190,28 @@ export function generateJenkins(c: PipelineConfig): string {
   }
 
   if (c.deployTarget !== "none") {
-    lines.push(`${indent(2)}stage('Deploy') {`);
-    lines.push(`${indent(3)}when {`);
-    lines.push(`${indent(4)}branch '${c.branches[0] || "main"}'`);
-    lines.push(`${indent(3)}}`);
-    lines.push(`${indent(3)}steps {`);
-    if (c.deployTarget === "aws") {
-      lines.push(`${indent(4)}withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {`);
-      lines.push(`${indent(5)}sh '''`);
-      lines.push(`${indent(6)}aws ecs update-service --cluster \${AWS_CLUSTER} --service \${AWS_SERVICE} --force-new-deployment`);
-      lines.push(`${indent(5)}'''`);
-      lines.push(`${indent(4)}}`);
-    } else if (c.deployTarget === "kubernetes") {
-      lines.push(`${indent(4)}sh '''`);
-      lines.push(`${indent(5)}kubectl apply -f k8s/`);
-      lines.push(`${indent(5)}kubectl rollout status deployment/\${K8S_DEPLOYMENT}`);
-      lines.push(`${indent(4)}'''`);
+    if (c.environments?.enabled && c.environments.stages) {
+      for (const stage of c.environments.stages) {
+        lines.push(`${indent(2)}stage('Deploy to ${stage.name}') {`);
+        lines.push(`${indent(3)}when {`);
+        lines.push(`${indent(4)}branch '${stage.branch}'`);
+        lines.push(`${indent(3)}}`);
+        lines.push(`${indent(3)}steps {`);
+        lines.push(...getJenkinsDeploySteps(c, 4, stage.name));
+        lines.push(`${indent(3)}}`);
+        lines.push(`${indent(2)}}`);
+        lines.push("");
+      }
+    } else {
+      lines.push(`${indent(2)}stage('Deploy') {`);
+      lines.push(`${indent(3)}when {`);
+      lines.push(`${indent(4)}branch '${c.branches[0] || "main"}'`);
+      lines.push(`${indent(3)}}`);
+      lines.push(`${indent(3)}steps {`);
+      lines.push(...getJenkinsDeploySteps(c, 4, "production"));
+      lines.push(`${indent(3)}}`);
+      lines.push(`${indent(2)}}`);
     }
-    lines.push(`${indent(3)}}`);
-    lines.push(`${indent(2)}}`);
   }
 
   lines.push(`${indent(1)}}`);
@@ -329,25 +332,48 @@ function getJenkinsTestSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
-  switch (c.projectType) {
-    case "nodejs":
-      lines.push(`${indent(depth)}sh 'npm test'`);
-      break;
-    case "python":
-      lines.push(`${indent(depth)}sh 'pip install pytest && pytest'`);
-      break;
-    case "java":
-      lines.push(`${indent(depth)}sh 'mvn test'`);
-      break;
-    case "go":
-      lines.push(`${indent(depth)}sh 'go test ./...'`);
-      break;
-    case "rust":
-      lines.push(`${indent(depth)}sh 'cargo test'`);
-      break;
-    case "dotnet":
-      lines.push(`${indent(depth)}sh 'dotnet test'`);
-      break;
+  if (c.optimization?.enabled && c.optimization.parallelizeTests) {
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth)}sh 'npx jest --maxWorkers=4'`);
+        break;
+      case "python":
+        lines.push(`${indent(depth)}sh 'pip install pytest-xdist && pytest -n auto'`);
+        break;
+      case "java":
+        lines.push(`${indent(depth)}sh 'mvn test -T 4'`);
+        break;
+      case "go":
+        lines.push(`${indent(depth)}sh 'go test -parallel 4 ./...'`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth)}sh 'cargo test --jobs 4'`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth)}sh 'dotnet test --parallel'`);
+        break;
+    }
+  } else {
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth)}sh 'npm test'`);
+        break;
+      case "python":
+        lines.push(`${indent(depth)}sh 'pip install pytest && pytest'`);
+        break;
+      case "java":
+        lines.push(`${indent(depth)}sh 'mvn test'`);
+        break;
+      case "go":
+        lines.push(`${indent(depth)}sh 'go test ./...'`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth)}sh 'cargo test'`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth)}sh 'dotnet test'`);
+        break;
+    }
   }
   return lines;
 }
@@ -490,5 +516,66 @@ function getJenkinsAuditSteps(c: PipelineConfig, depth: number): string[] {
       lines.push(`${indent(depth)}sh 'dotnet list package --vulnerable'`);
       break;
   }
+  return lines;
+}
+
+function getJenkinsDeploySteps(c: PipelineConfig, depth: number, environment: string): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  switch (c.deployTarget) {
+    case "aws":
+      lines.push(`${indent(depth)}withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {`);
+      lines.push(`${indent(depth + 1)}sh '''`);
+      lines.push(`${indent(depth + 2)}aws ecs update-service --cluster \\${AWS_CLUSTER} --service \\${AWS_SERVICE} --force-new-deployment`);
+      if (c.deploymentStrategy === "rolling") {
+        lines.push(`${indent(depth + 2)}aws ecs update-service --cluster \\${AWS_CLUSTER} --service \\${AWS_SERVICE} --deployment-configuration maximumPercent=200,minimumHealthyPercent=100`);
+      }
+      lines.push(`${indent(depth + 1)}'''`);
+      lines.push(`${indent(depth)}}`);
+      break;
+    case "kubernetes":
+      lines.push(`${indent(depth)}sh '''`);
+      lines.push(`${indent(depth + 1)}kubectl apply -f k8s/`);
+      if (c.deploymentStrategy === "rolling") {
+        lines.push(`${indent(depth + 1)}kubectl rollout status deployment/\\${K8S_DEPLOYMENT}`);
+      } else if (c.deploymentStrategy === "canary") {
+        lines.push(`${indent(depth + 1)}kubectl apply -f k8s/canary/`);
+      } else if (c.deploymentStrategy === "blue-green") {
+        lines.push(`${indent(depth + 1)}kubectl apply -f k8s/blue-green/`);
+      }
+      lines.push(`${indent(depth)}'''`);
+      break;
+    case "vercel":
+      lines.push(`${indent(depth)}sh 'npm install -g vercel && vercel --prod --token \\$VERCEL_TOKEN'`);
+      break;
+    case "netlify":
+      lines.push(`${indent(depth)}sh 'npm install -g netlify-cli && netlify deploy --prod --dir=dist'`);
+      break;
+    case "fly-io":
+      lines.push(`${indent(depth)}sh 'curl -L https://fly.io/install.sh | sh && /root/.fly/bin/flyctl deploy --remote-only'`);
+      break;
+    case "railway":
+      lines.push(`${indent(depth)}sh 'npm install -g @railway/cli && railway deploy --service \\$RAILWAY_SERVICE_ID'`);
+      break;
+    case "cloudflare-pages":
+      lines.push(`${indent(depth)}sh 'npm install -g wrangler && wrangler pages deploy dist --project-name=${c.projectName}'`);
+      break;
+    case "digitalocean":
+      lines.push(`${indent(depth)}sh 'curl -sSL https://cli.digitalocean.com/install.sh | sh && doctl apps create-deployment ${c.projectName}'`);
+      break;
+    case "heroku":
+      lines.push(`${indent(depth)}sh 'apt-get update -qq && apt-get install -y heroku'`);
+      lines.push(`${indent(depth)}sh 'heroku container:push web --app \\$HEROKU_APP_NAME'`);
+      lines.push(`${indent(depth)}sh 'heroku container:release web --app \\$HEROKU_APP_NAME'`);
+      break;
+    case "azure":
+      lines.push(`${indent(depth)}sh 'az webapp up --name \\$AZURE_WEBAPP_NAME --resource-group \\$AZURE_RESOURCE_GROUP'`);
+      break;
+    case "gcp":
+      lines.push(`${indent(depth)}sh 'gcloud auth configure-docker && gcloud run deploy ${c.projectName} --source . --region \\$GCP_REGION'`);
+      break;
+  }
+
   return lines;
 }

@@ -205,19 +205,31 @@ export function generateGitLabCI(c: PipelineConfig): string {
   }
 
   if (c.deployTarget !== "none") {
-    lines.push("deploy:");
-    lines.push("  stage: deploy");
-    lines.push("  script:");
-    if (c.deployTarget === "aws") {
-      lines.push("    - pip install awscli");
-      lines.push("    - aws ecs update-service --cluster $AWS_CLUSTER --service $AWS_SERVICE --force-new-deployment");
-    } else if (c.deployTarget === "kubernetes") {
-      lines.push("    - kubectl set image deployment/$K8S_DEPLOYMENT $K8S_CONTAINER=$DOCKER_IMAGE:$CI_COMMIT_SHA");
+    if (c.environments?.enabled && c.environments.stages) {
+      for (const stage of c.environments.stages) {
+        lines.push(`deploy_${stage.name.toLowerCase()}:`);
+        lines.push("  stage: deploy");
+        lines.push("  script:");
+        lines.push(...getGitLabDeployScript(c, stage.name));
+        lines.push(`  only:`);
+        lines.push(`    - ${stage.branch}`);
+        if (stage.requireApproval) {
+          lines.push("  when: manual");
+        }
+        lines.push("  environment:");
+        lines.push(`    name: ${stage.name}`);
+        lines.push("");
+      }
+    } else {
+      lines.push("deploy:");
+      lines.push("  stage: deploy");
+      lines.push("  script:");
+      lines.push(...getGitLabDeployScript(c, "production"));
+      lines.push("  only:");
+      lines.push("    - main");
+      lines.push("  when: manual");
+      lines.push("");
     }
-    lines.push("  only:");
-    lines.push("    - main");
-    lines.push("  when: manual");
-    lines.push("");
   }
 
   return lines.join("\n");
@@ -305,6 +317,17 @@ function getGitLabLintScript(c: PipelineConfig): string[] {
 }
 
 function getGitLabTestScript(c: PipelineConfig): string[] {
+  if (c.optimization?.enabled && c.optimization.parallelizeTests) {
+    switch (c.projectType) {
+      case "nodejs": return ["    - npx jest --maxWorkers=4"];
+      case "python": return ["    - pip install pytest-xdist", "    - pytest -n auto"];
+      case "java": return ["    - mvn test -T 4"];
+      case "go": return ["    - go test -parallel 4 ./..."];
+      case "rust": return ["    - cargo test --jobs 4"];
+      case "dotnet": return ["    - dotnet test --parallel"];
+      default: return [];
+    }
+  }
   switch (c.projectType) {
     case "nodejs": return ["    - npm test"];
     case "python": return ["    - pip install pytest", "    - pytest"];
@@ -378,4 +401,66 @@ function getGitLabAuditScript(c: PipelineConfig): string[] {
     case "dotnet": return ["    - dotnet list package --vulnerable"];
     default: return [];
   }
+}
+
+function getGitLabDeployScript(c: PipelineConfig, environment: string): string[] {
+  const lines: string[] = [];
+  
+  switch (c.deployTarget) {
+    case "aws":
+      lines.push("    - pip install awscli");
+      lines.push(`    - aws ecs update-service --cluster $AWS_CLUSTER --service $AWS_SERVICE --force-new-deployment`);
+      if (c.deploymentStrategy === "rolling") {
+        lines.push(`    - aws ecs update-service --cluster $AWS_CLUSTER --service $AWS_SERVICE --deployment-configuration maximumPercent=200,minimumHealthyPercent=100`);
+      }
+      break;
+    case "kubernetes":
+      lines.push(`    - kubectl apply -f k8s/`);
+      if (c.deploymentStrategy === "rolling") {
+        lines.push(`    - kubectl rollout status deployment/$K8S_DEPLOYMENT`);
+      } else if (c.deploymentStrategy === "canary") {
+        lines.push(`    - kubectl apply -f k8s/canary/`);
+      } else if (c.deploymentStrategy === "blue-green") {
+        lines.push(`    - kubectl apply -f k8s/blue-green/`);
+      }
+      break;
+    case "vercel":
+      lines.push("    - npm install -g vercel");
+      lines.push(`    - vercel --prod --token $VERCEL_TOKEN`);
+      break;
+    case "netlify":
+      lines.push("    - npm install -g netlify-cli");
+      lines.push(`    - netlify deploy --prod --dir=dist`);
+      break;
+    case "fly-io":
+      lines.push("    - curl -L https://fly.io/install.sh | sh");
+      lines.push(`    - /root/.fly/bin/flyctl deploy --remote-only`);
+      break;
+    case "railway":
+      lines.push("    - npm install -g @railway/cli");
+      lines.push(`    - railway deploy --service $RAILWAY_SERVICE_ID`);
+      break;
+    case "cloudflare-pages":
+      lines.push("    - npm install -g wrangler");
+      lines.push(`    - wrangler pages deploy dist --project-name=${c.projectName}`);
+      break;
+    case "digitalocean":
+      lines.push("    - curl -sSL https://cli.digitalocean.com/install.sh | sh");
+      lines.push(`    - doctl apps create-deployment ${c.projectName}`);
+      break;
+    case "heroku":
+      lines.push("    - apt-get update -qq && apt-get install -y heroku");
+      lines.push(`    - heroku container:push web --app $HEROKU_APP_NAME`);
+      lines.push(`    - heroku container:release web --app $HEROKU_APP_NAME`);
+      break;
+    case "azure":
+      lines.push("    - az webapp up --name $AZURE_WEBAPP_NAME --resource-group $AZURE_RESOURCE_GROUP");
+      break;
+    case "gcp":
+      lines.push("    - gcloud auth configure-docker");
+      lines.push(`    - gcloud run deploy ${c.projectName} --source . --region $GCP_REGION`);
+      break;
+  }
+  
+  return lines;
 }

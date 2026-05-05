@@ -122,6 +122,11 @@ export function generateGitHubActions(c: PipelineConfig): string {
     lines.push(...getDockerJob(c));
   }
 
+  if (c.customActions && c.customActions.length > 0) {
+    lines.push("");
+    lines.push(...getCustomActions(c, 3));
+  }
+
   if (c.deployTarget !== "none") {
     lines.push("");
     lines.push(...getDeployJob(c));
@@ -133,6 +138,11 @@ export function generateGitHubActions(c: PipelineConfig): string {
 function getCachingSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
+
+  // Skip caching if optimization is disabled
+  if (c.optimization?.enabled && !c.optimization.cacheDependencies) {
+    return lines;
+  }
 
   switch (c.projectType) {
     case "nodejs":
@@ -349,33 +359,60 @@ function getTestSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
-  switch (c.projectType) {
-    case "nodejs":
-      lines.push(`${indent(depth)}- name: Run tests`);
-      lines.push(`${indent(depth)}  run: npm test`);
-      break;
-    case "python":
-      lines.push(`${indent(depth)}- name: Run tests`);
-      lines.push(`${indent(depth)}  run: |`);
-      lines.push(`${indent(depth)}    pip install pytest`);
-      lines.push(`${indent(depth)}    pytest`);
-      break;
-    case "java":
-      lines.push(`${indent(depth)}- name: Run tests`);
-      lines.push(`${indent(depth)}  run: mvn test`);
-      break;
-    case "go":
-      lines.push(`${indent(depth)}- name: Run tests`);
-      lines.push(`${indent(depth)}  run: go test ./...`);
-      break;
-    case "rust":
-      lines.push(`${indent(depth)}- name: Run tests`);
-      lines.push(`${indent(depth)}  run: cargo test`);
-      break;
-    case "dotnet":
-      lines.push(`${indent(depth)}- name: Run tests`);
-      lines.push(`${indent(depth)}  run: dotnet test`);
-      break;
+  // Add parallel test execution if optimization is enabled
+  if (c.optimization?.enabled && c.optimization.parallelizeTests) {
+    lines.push(`${indent(depth)}- name: Run tests in parallel`);
+    lines.push(`${indent(depth)}  run: |`);
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth)}    npx jest --maxWorkers=4`);
+        break;
+      case "python":
+        lines.push(`${indent(depth)}    pip install pytest-xdist`);
+        lines.push(`${indent(depth)}    pytest -n auto`);
+        break;
+      case "java":
+        lines.push(`${indent(depth)}    mvn test -T 4`);
+        break;
+      case "go":
+        lines.push(`${indent(depth)}    go test -parallel 4 ./...`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth)}    cargo test --jobs 4`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth)}    dotnet test --parallel`);
+        break;
+    }
+  } else {
+    switch (c.projectType) {
+      case "nodejs":
+        lines.push(`${indent(depth)}- name: Run tests`);
+        lines.push(`${indent(depth)}  run: npm test`);
+        break;
+      case "python":
+        lines.push(`${indent(depth)}- name: Run tests`);
+        lines.push(`${indent(depth)}  run: |`);
+        lines.push(`${indent(depth)}    pip install pytest`);
+        lines.push(`${indent(depth)}    pytest`);
+        break;
+      case "java":
+        lines.push(`${indent(depth)}- name: Run tests`);
+        lines.push(`${indent(depth)}  run: mvn test`);
+        break;
+      case "go":
+        lines.push(`${indent(depth)}- name: Run tests`);
+        lines.push(`${indent(depth)}  run: go test ./...`);
+        break;
+      case "rust":
+        lines.push(`${indent(depth)}- name: Run tests`);
+        lines.push(`${indent(depth)}  run: cargo test`);
+        break;
+      case "dotnet":
+        lines.push(`${indent(depth)}- name: Run tests`);
+        lines.push(`${indent(depth)}  run: dotnet test`);
+        break;
+    }
   }
   return lines;
 }
@@ -451,44 +488,178 @@ function getDeployJob(c: PipelineConfig): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const needs = c.enableDocker ? "docker" : "build";
 
-  lines.push(`${indent(1)}deploy:`);
-  lines.push(`${indent(2)}runs-on: ubuntu-latest`);
-  lines.push(`${indent(2)}needs: ${needs}`);
-  lines.push(`${indent(2)}if: github.ref == 'refs/heads/main'`);
-  lines.push(`${indent(2)}environment: production`);
-  lines.push("");
-  lines.push(`${indent(2)}steps:`);
-  lines.push(`${indent(3)}- uses: actions/checkout@v4`);
+  // Multi-environment support
+  if (c.environments?.enabled && c.environments.stages && c.environments.stages.length > 0) {
+    for (const stage of c.environments.stages) {
+      lines.push(`${indent(1)}deploy-${stage.name.toLowerCase()}:`);
+      lines.push(`${indent(2)}runs-on: ubuntu-latest`);
+      lines.push(`${indent(2)}needs: ${needs}`);
+      lines.push(`${indent(2)}if: github.ref == 'refs/heads/${stage.branch}'`);
+      lines.push(`${indent(2)}environment: ${stage.name}`);
+      
+      if (stage.requireApproval) {
+        lines.push(`${indent(2)}environment: ${stage.name}`);
+      }
+      
+      lines.push("");
+      lines.push(`${indent(2)}steps:`);
+      lines.push(`${indent(3)}- uses: actions/checkout@v4`);
+      lines.push("");
+      lines.push(...getDeploySteps(c, 3, stage.name));
+      lines.push("");
+    }
+  } else {
+    lines.push(`${indent(1)}deploy:`);
+    lines.push(`${indent(2)}runs-on: ubuntu-latest`);
+    lines.push(`${indent(2)}needs: ${needs}`);
+    lines.push(`${indent(2)}if: github.ref == 'refs/heads/main'`);
+    lines.push(`${indent(2)}environment: production`);
+    lines.push("");
+    lines.push(`${indent(2)}steps:`);
+    lines.push(`${indent(3)}- uses: actions/checkout@v4`);
+    lines.push("");
+    lines.push(...getDeploySteps(c, 3, "production"));
+  }
 
-  if (c.deployTarget === "aws") {
-    lines.push("");
-    lines.push(`${indent(3)}- name: Configure AWS Credentials`);
-    lines.push(`${indent(3)}  uses: aws-actions/configure-aws-credentials@v4`);
-    lines.push(`${indent(3)}  with:`);
-    lines.push(`${indent(3)}    aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}`);
-    lines.push(`${indent(3)}    aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}`);
-    lines.push(`${indent(3)}    aws-region: \${{ secrets.AWS_REGION }}`);
-    lines.push("");
-    lines.push(`${indent(3)}- name: Deploy to AWS ECS`);
-    lines.push(`${indent(3)}  run: |`);
-    lines.push(`${indent(3)}    aws ecs update-service \\`);
-    lines.push(`${indent(3)}      --cluster \${{ secrets.AWS_CLUSTER }} \\`);
-    lines.push(`${indent(3)}      --service \${{ secrets.AWS_SERVICE }} \\`);
-    lines.push(`${indent(3)}      --force-new-deployment`);
-  } else if (c.deployTarget === "kubernetes") {
-    lines.push("");
-    lines.push(`${indent(3)}- name: Setup kubectl`);
-    lines.push(`${indent(3)}  uses: azure/setup-kubectl@v4`);
-    lines.push("");
-    lines.push(`${indent(3)}- name: Set Kubernetes context`);
-    lines.push(`${indent(3)}  uses: azure/k8s-set-context@v4`);
-    lines.push(`${indent(3)}  with:`);
-    lines.push(`${indent(3)}    kubeconfig: \${{ secrets.KUBE_CONFIG }}`);
-    lines.push("");
-    lines.push(`${indent(3)}- name: Deploy to Kubernetes`);
-    lines.push(`${indent(3)}  run: |`);
-    lines.push(`${indent(3)}    kubectl apply -f k8s/`);
-    lines.push(`${indent(3)}    kubectl rollout status deployment/\${{ secrets.K8S_DEPLOYMENT }}`);
+  return lines;
+}
+
+function getDeploySteps(c: PipelineConfig, depth: number, environment: string): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  switch (c.deployTarget) {
+    case "aws":
+      lines.push(`${indent(depth)}- name: Configure AWS Credentials`);
+      lines.push(`${indent(depth)}  uses: aws-actions/configure-aws-credentials@v4`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    aws-access-key-id: \${{ secrets.AWS_ACCESS_KEY_ID }}`);
+      lines.push(`${indent(depth)}    aws-secret-access-key: \${{ secrets.AWS_SECRET_ACCESS_KEY }}`);
+      lines.push(`${indent(depth)}    aws-region: \${{ secrets.AWS_REGION }}`);
+      lines.push("");
+      lines.push(`${indent(depth)}- name: Deploy to AWS ECS`);
+      lines.push(`${indent(depth)}  run: |`);
+      lines.push(`${indent(depth)}    aws ecs update-service \\`);
+      lines.push(`${indent(depth)}      --cluster \${{ secrets.AWS_CLUSTER }} \\`);
+      lines.push(`${indent(depth)}      --service \${{ secrets.AWS_SERVICE }} \\`);
+      
+      if (c.deploymentStrategy === 'rolling') {
+        lines.push(`${indent(depth)}      --deployment-configuration maximumPercent=200,minimumHealthyPercent=100`);
+      } else if (c.deploymentStrategy === 'blue-green') {
+        lines.push(`${indent(depth)}      --deployment-configuration deploymentCircuitBreaker={enable=true,rollback=true}`);
+      }
+      
+      lines.push(`${indent(depth)}      --force-new-deployment`);
+      break;
+      
+    case "kubernetes":
+      lines.push(`${indent(depth)}- name: Setup kubectl`);
+      lines.push(`${indent(depth)}  uses: azure/setup-kubectl@v4`);
+      lines.push("");
+      lines.push(`${indent(depth)}- name: Set Kubernetes context`);
+      lines.push(`${indent(depth)}  uses: azure/k8s-set-context@v4`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    kubeconfig: \${{ secrets.KUBE_CONFIG }}`);
+      lines.push("");
+      lines.push(`${indent(depth)}- name: Deploy to Kubernetes`);
+      lines.push(`${indent(depth)}  run: |`);
+      lines.push(`${indent(depth)}    kubectl apply -f k8s/`);
+      
+      if (c.deploymentStrategy === 'rolling') {
+        lines.push(`${indent(depth)}    kubectl rollout status deployment/\${{ secrets.K8S_DEPLOYMENT }}`);
+      } else if (c.deploymentStrategy === 'canary') {
+        lines.push(`${indent(depth)}    kubectl apply -f k8s/canary/`);
+      } else if (c.deploymentStrategy === 'blue-green') {
+        lines.push(`${indent(depth)}    kubectl apply -f k8s/blue-green/`);
+      }
+      break;
+      
+    case "vercel":
+      lines.push(`${indent(depth)}- name: Deploy to Vercel`);
+      lines.push(`${indent(depth)}  uses: amondnet/vercel-action@v25`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    vercel-token: \${{ secrets.VERCEL_TOKEN }}`);
+      lines.push(`${indent(depth)}    vercel-org-id: \${{ secrets.VERCEL_ORG_ID }}`);
+      lines.push(`${indent(depth)}    vercel-project-id: \${{ secrets.VERCEL_PROJECT_ID }}`);
+      lines.push(`${indent(depth)}    vercel-args: '--prod'`);
+      break;
+      
+    case "netlify":
+      lines.push(`${indent(depth)}- name: Deploy to Netlify`);
+      lines.push(`${indent(depth)}  uses: nwtgck/actions-netlify@v2.1`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    publish-dir: './dist'`);
+      lines.push(`${indent(depth)}    production-branch: main`);
+      lines.push(`${indent(depth)}    github-token: \${{ secrets.GITHUB_TOKEN }}`);
+      lines.push(`${indent(depth)}    deploy-message: "Deploy from GitHub Actions"`);
+      lines.push(`${indent(depth)}  env:`);
+      lines.push(`${indent(depth)}    NETLIFY_AUTH_TOKEN: \${{ secrets.NETLIFY_AUTH_TOKEN }}`);
+      lines.push(`${indent(depth)}    NETLIFY_SITE_ID: \${{ secrets.NETLIFY_SITE_ID }}`);
+      break;
+      
+    case "fly-io":
+      lines.push(`${indent(depth)}- name: Deploy to Fly.io`);
+      lines.push(`${indent(depth)}  uses: superfly/flyctl-actions/setup-flyctl@master`);
+      lines.push("");
+      lines.push(`${indent(depth)}- name: Deploy to Fly.io`);
+      lines.push(`${indent(depth)}  run: flyctl deploy --remote-only`);
+      lines.push(`${indent(depth)}  env:`);
+      lines.push(`${indent(depth)}    FLY_API_TOKEN: \${{ secrets.FLY_API_TOKEN }}`);
+      break;
+      
+    case "railway":
+      lines.push(`${indent(depth)}- name: Deploy to Railway`);
+      lines.push(`${indent(depth)}  uses: railwayapp/cli-action@v1.0.0`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    railway-token: \${{ secrets.RAILWAY_TOKEN }}`);
+      lines.push(`${indent(depth)}    service: \${{ secrets.RAILWAY_SERVICE_ID }}`);
+      break;
+      
+    case "cloudflare-pages":
+      lines.push(`${indent(depth)}- name: Deploy to Cloudflare Pages`);
+      lines.push(`${indent(depth)}  uses: cloudflare/wrangler-action@v3`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    apiToken: \${{ secrets.CLOUDFLARE_API_TOKEN }}`);
+      lines.push(`${indent(depth)}    accountId: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}`);
+      lines.push(`${indent(depth)}    command: pages deploy dist --project-name=${c.projectName}`);
+      break;
+      
+    case "digitalocean":
+      lines.push(`${indent(depth)}- name: Deploy to DigitalOcean App Platform`);
+      lines.push(`${indent(depth)}  uses: digitalocean/app_action@v2.0.0`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    app_name: ${c.projectName}`);
+      lines.push(`${indent(depth)}    token: \${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}`);
+      break;
+      
+    case "heroku":
+      lines.push(`${indent(depth)}- name: Deploy to Heroku`);
+      lines.push(`${indent(depth)}  uses: akhileshns/heroku-deploy@v3.13.15`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    heroku_api_key: \${{ secrets.HEROKU_API_KEY }}`);
+      lines.push(`${indent(depth)}    heroku_app_name: \${{ secrets.HEROKU_APP_NAME }}`);
+      lines.push(`${indent(depth)}    heroku_email: \${{ secrets.HEROKU_EMAIL }}`);
+      break;
+      
+    case "azure":
+      lines.push(`${indent(depth)}- name: Deploy to Azure App Service`);
+      lines.push(`${indent(depth)}  uses: azure/webapps-deploy@v2`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    app-name: \${{ secrets.AZURE_WEBAPP_NAME }}`);
+      lines.push(`${indent(depth)}    publish-profile: \${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}`);
+      lines.push(`${indent(depth)}    package: ./dist`);
+      break;
+      
+    case "gcp":
+      lines.push(`${indent(depth)}- name: Deploy to Google Cloud Run`);
+      lines.push(`${indent(depth)}  uses: google-github-actions/deploy-cloudrun@v2`);
+      lines.push(`${indent(depth)}  with:`);
+      lines.push(`${indent(depth)}    service: ${c.projectName}`);
+      lines.push(`${indent(depth)}    region: \${{ secrets.GCP_REGION }}`);
+      lines.push(`${indent(depth)}    source: ./`);
+      lines.push(`${indent(depth)}  env:`);
+      lines.push(`${indent(depth)}    GOOGLE_CREDENTIALS: \${{ secrets.GCP_CREDENTIALS }}`);
+      break;
   }
 
   return lines;
@@ -667,4 +838,50 @@ function getSonarQubeSteps(c: PipelineConfig, depth: number): string[] {
     lines.push(`${indent(depth)}  timeout-minutes: 5`);
   }
   return lines;
+}
+
+function getCustomActions(c: PipelineConfig, depth: number): string[] {
+  const indent = (n: number) => "  ".repeat(n);
+  const lines: string[] = [];
+
+  if (!c.customActions || c.customActions.length === 0) return lines;
+
+  for (const action of c.customActions) {
+    lines.push(`${indent(depth)}- name: ${action.name}`);
+    lines.push(`${indent(depth)}  uses: ${action.uses}`);
+    
+    if (action.with && Object.keys(action.with).length > 0) {
+      lines.push(`${indent(depth)}  with:`);
+      for (const [key, value] of Object.entries(action.with)) {
+        lines.push(`${indent(depth)}    ${key}: ${value}`);
+      }
+    }
+    
+    // Add conditional execution if specified
+    if (c.conditionalSteps?.enabled && c.conditionalSteps.rules) {
+      const rule = c.conditionalSteps.rules.find(r => r.step === action.name);
+      if (rule) {
+        lines.push(`${indent(depth)}  if: ${getConditionExpression(rule)}`);
+      }
+    }
+    
+    lines.push("");
+  }
+
+  return lines;
+}
+
+function getConditionExpression(rule: { condition: string; value: string }): string {
+  switch (rule.condition) {
+    case 'branch':
+      return `github.ref == 'refs/heads/${rule.value}'`;
+    case 'path':
+      return `contains(github.event.head_commit.modified, '${rule.value}')`;
+    case 'event':
+      return `github.event_name == '${rule.value}'`;
+    case 'custom':
+      return rule.value;
+    default:
+      return 'true';
+  }
 }
