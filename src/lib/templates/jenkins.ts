@@ -240,36 +240,36 @@ function getJenkinsInstallSteps(c: PipelineConfig, depth: number): string[] {
       const installCmd = c.packageManager === "yarn" ? "yarn install --frozen-lockfile" :
                         c.packageManager === "pnpm" ? "pnpm install --frozen-lockfile" :
                         c.packageManager === "bun" ? "bun install" : "npm ci";
-      lines.push(`${indent(depth)}sh '${installCmd}'`);
+      lines.push(`${indent(depth + 1)}sh '${installCmd}'`);
       if (c.isMonorepo && c.monorepoTool) {
-        lines.push(`${indent(depth)}sh 'npx ${c.monorepoTool}@latest install'`);
+        lines.push(`${indent(depth + 1)}sh 'npx ${c.monorepoTool}@latest install'`);
       }
       break;
     case "python":
       if (c.packageManager === "poetry") {
-        lines.push(`${indent(depth)}sh 'pip install poetry && poetry install'`);
+        lines.push(`${indent(depth + 1)}sh 'pip install poetry && poetry install'`);
       } else {
-        lines.push(`${indent(depth)}sh '''`);
-        lines.push(`${indent(depth + 1)}python -m pip install --upgrade pip`);
-        lines.push(`${indent(depth + 1)}pip install -r requirements.txt`);
-        lines.push(`${indent(depth)}'''`);
+        lines.push(`${indent(depth + 1)}sh '''`);
+        lines.push(`${indent(depth + 2)}python -m pip install --upgrade pip`);
+        lines.push(`${indent(depth + 2)}pip install -r requirements.txt`);
+        lines.push(`${indent(depth + 1)}'''`);
       }
       break;
     case "java":
       if (c.packageManager === "gradle") {
-        lines.push(`${indent(depth)}sh './gradlew dependencies'`);
+        lines.push(`${indent(depth + 1)}sh './gradlew dependencies'`);
       } else {
-        lines.push(`${indent(depth)}sh 'mvn dependency:resolve'`);
+        lines.push(`${indent(depth + 1)}sh 'mvn dependency:resolve'`);
       }
       break;
     case "go":
-      lines.push(`${indent(depth)}sh 'go mod download'`);
+      lines.push(`${indent(depth + 1)}sh 'go mod download'`);
       break;
     case "rust":
-      lines.push(`${indent(depth)}sh 'cargo fetch'`);
+      lines.push(`${indent(depth + 1)}sh 'cargo fetch'`);
       break;
     case "dotnet":
-      lines.push(`${indent(depth)}sh 'dotnet restore'`);
+      lines.push(`${indent(depth + 1)}sh 'dotnet restore'`);
       break;
   }
 

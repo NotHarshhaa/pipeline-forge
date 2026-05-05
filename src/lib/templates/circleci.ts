@@ -238,6 +238,12 @@ function getCircleCIInstallSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- run: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  name: Change working directory`);
+  }
+
   lines.push(`${indent(depth)}- run:`);
   lines.push(`${indent(depth + 1)}name: Install dependencies`);
   lines.push(`${indent(depth + 1)}command: |`);

@@ -56,13 +56,6 @@ export function generateGitHubActions(c: PipelineConfig): string {
   lines.push(`${indent(2)}steps:`);
   lines.push(`${indent(3)}- uses: actions/checkout@v4`);
 
-  // Add working directory change if specified
-  if (c.workingDirectory && c.workingDirectory !== ".") {
-    lines.push(`${indent(3)}- name: Change working directory`);
-    lines.push(`${indent(3)}  run: cd ${c.workingDirectory}`);
-    lines.push("");
-  }
-
   if (c.enableCaching) {
     lines.push("");
     lines.push(...getCachingSteps(c, 3));

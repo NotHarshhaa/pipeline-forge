@@ -240,6 +240,12 @@ function getAzureInstallSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
+
   lines.push(`${indent(depth)}- script: |`);
 
   switch (c.projectType) {
@@ -271,6 +277,12 @@ function getAzureInstallSteps(c: PipelineConfig, depth: number): string[] {
 function getAzureLintSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
+
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
 
   lines.push(`${indent(depth)}- script: |`);
 
@@ -304,6 +316,12 @@ function getAzureSecuritySteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
+
   lines.push(`${indent(depth)}- script: |`);
 
   switch (c.projectType) {
@@ -326,6 +344,12 @@ function getAzureSecuritySteps(c: PipelineConfig, depth: number): string[] {
 function getAzureTestSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
+
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
 
   lines.push(`${indent(depth)}- script: |`);
 
@@ -359,6 +383,12 @@ function getAzureBuildSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
+
   lines.push(`${indent(depth)}- script: |`);
 
   switch (c.projectType) {
@@ -389,6 +419,12 @@ function getAzureBuildSteps(c: PipelineConfig, depth: number): string[] {
 function getAzureFormatSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
+
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
 
   lines.push(`${indent(depth)}- script: |`);
 
@@ -422,6 +458,12 @@ function getAzureTypeCheckSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
+
   lines.push(`${indent(depth)}- script: |`);
 
   switch (c.projectType) {
@@ -454,6 +496,12 @@ function getAzureE2ESteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
 
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
+
   lines.push(`${indent(depth)}- script: |`);
 
   switch (c.projectType) {
@@ -485,6 +533,12 @@ function getAzureE2ESteps(c: PipelineConfig, depth: number): string[] {
 function getAzureAuditSteps(c: PipelineConfig, depth: number): string[] {
   const indent = (n: number) => "  ".repeat(n);
   const lines: string[] = [];
+
+  // Add working directory change at job level if specified
+  if (c.workingDirectory && c.workingDirectory !== ".") {
+    lines.push(`${indent(depth)}- script: cd ${c.workingDirectory}`);
+    lines.push(`${indent(depth)}  displayName: 'Change working directory'`);
+  }
 
   lines.push(`${indent(depth)}- script: |`);
 
