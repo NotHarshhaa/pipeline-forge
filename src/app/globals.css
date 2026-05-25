@@ -226,8 +226,9 @@
   border-radius: 8px;
 }
 
-/* Generator workbench atmosphere */
-.generator-section {
+/* Shared section atmosphere (hero, features, generator, etc.) */
+.generator-section,
+.section-surface {
   position: relative;
   isolation: isolate;
 }
@@ -274,14 +275,15 @@
   border-radius: 0.75rem;
   overflow: hidden;
   border: 1px solid oklch(0.922 0.005 325.62);
-  background: oklch(0.212 0.019 322.12);
+  background: oklch(1 0 0);
   box-shadow:
     0 0 0 1px oklch(0 0 0 / 4%),
-    0 20px 50px -12px oklch(0 0 0 / 25%);
+    0 16px 40px -12px oklch(0 0 0 / 12%);
 }
 
 .dark .terminal-chrome {
   border-color: oklch(1 0 0 / 12%);
+  background: oklch(0.212 0.019 322.12);
   box-shadow:
     0 0 0 1px oklch(1 0 0 / 6%),
     0 24px 60px -16px oklch(0 0 0 / 50%);
@@ -291,9 +293,24 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border-bottom: 1px solid oklch(1 0 0 / 8%);
-  background: oklch(0.263 0.024 320.12);
+  border-bottom: 1px solid oklch(0.922 0.005 325.62);
+  background: oklch(0.967 0.001 286.375);
   padding: 0.625rem 1rem;
+}
+
+.dark .terminal-titlebar {
+  border-bottom-color: oklch(1 0 0 / 8%);
+  background: oklch(0.263 0.024 320.12);
+}
+
+.terminal-code-area {
+  background: oklch(0.985 0 0);
+  color: oklch(0.25 0.02 322);
+}
+
+.dark .terminal-code-area {
+  background: oklch(0.18 0.02 322);
+  color: oklch(0.92 0.02 160);
 }
 
 .terminal-dot {

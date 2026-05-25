@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import {
   IconBolt,
   IconPuzzle,
@@ -23,196 +26,310 @@ import {
   IconBulb,
   IconCurrencyDollar,
   IconDeviceMobile,
+  IconSparkles,
 } from "@tabler/icons-react";
+import type { Icon } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-const features = [
+type Feature = {
+  icon: Icon;
+  title: string;
+  description: string;
+};
+
+type FeatureCategory = {
+  id: string;
+  label: string;
+  description: string;
+  features: Feature[];
+};
+
+const featureCategories: FeatureCategory[] = [
+  {
+    id: "core",
+    label: "Core",
+    description: "Everything to go from zero to a working pipeline.",
+    features: [
+      {
+        icon: IconBolt,
+        title: "Instant generation",
+        description: "Production YAML in seconds, not hours of copy-paste.",
+      },
+      {
+        icon: IconPuzzle,
+        title: "Multi-stack support",
+        description: "Node.js, Python, Java, Go, Rust, and .NET.",
+      },
+      {
+        icon: IconRefresh,
+        title: "Multiple CI providers",
+        description: "GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure.",
+      },
+      {
+        icon: IconTemplate,
+        title: "Quick presets",
+        description: "Templates for Node, Python, Docker/K8s, and full enterprise setups.",
+      },
+      {
+        icon: IconPalette,
+        title: "Syntax highlighting",
+        description: "Readable, color-coded YAML in the live preview.",
+      },
+      {
+        icon: IconCheck,
+        title: "YAML validation",
+        description: "Catch syntax issues before you commit.",
+      },
+    ],
+  },
+  {
+    id: "build",
+    label: "Build & test",
+    description: "Quality gates from lint to performance.",
+    features: [
+      {
+        icon: IconBrandDocker,
+        title: "Docker support",
+        description: "Build and push images with configurable image names.",
+      },
+      {
+        icon: IconShieldLock,
+        title: "Security scanning",
+        description: "Dependency audits and container scans built in.",
+      },
+      {
+        icon: IconTerminal,
+        title: "Custom scripts",
+        description: "Pre-build, pre-test, and post-build hook commands.",
+      },
+      {
+        icon: IconGitBranch,
+        title: "Matrix builds",
+        description: "Test across Node/Python versions in parallel.",
+      },
+      {
+        icon: IconChartBar,
+        title: "Code quality",
+        description: "Coverage thresholds and quality gates.",
+      },
+      {
+        icon: IconRocket,
+        title: "Performance testing",
+        description: "Load tests and benchmarks in your pipeline.",
+      },
+    ],
+  },
+  {
+    id: "deploy",
+    label: "Deploy",
+    description: "Ship to the platform your team already uses.",
+    features: [
+      {
+        icon: IconCloud,
+        title: "Deployment targets",
+        description: "AWS, Kubernetes, Vercel, Netlify, Fly.io, Railway, and more.",
+      },
+      {
+        icon: IconSettings,
+        title: "Deployment strategies",
+        description: "Rolling, blue-green, canary, and recreate patterns.",
+      },
+      {
+        icon: IconGitBranch,
+        title: "Multi-environment",
+        description: "Map dev, staging, and prod to branches.",
+      },
+      {
+        icon: IconDatabase,
+        title: "Services & databases",
+        description: "PostgreSQL, MySQL, Redis, Elasticsearch sidecars.",
+      },
+      {
+        icon: IconPackage,
+        title: "Artifacts",
+        description: "Upload build outputs with retention policies.",
+      },
+      {
+        icon: IconClock,
+        title: "Scheduled runs",
+        description: "Cron-based pipelines with timezone support.",
+      },
+    ],
+  },
+  {
+    id: "dx",
+    label: "Developer UX",
+    description: "Tools that make iteration painless.",
+    features: [
+      {
+        icon: IconSettings,
+        title: "Environment variables",
+        description: "Key-value pairs injected into your workflow.",
+      },
+      {
+        icon: IconBell,
+        title: "Notifications",
+        description: "Slack webhooks and email alerts on failure.",
+      },
+      {
+        icon: IconDeviceFloppy,
+        title: "Save configurations",
+        description: "Persist setups in local storage.",
+      },
+      {
+        icon: IconUpload,
+        title: "Export / import",
+        description: "Share configs as JSON with your team.",
+      },
+      {
+        icon: IconArrowBackUp,
+        title: "Undo / redo",
+        description: "Walk through configuration history.",
+      },
+      {
+        icon: IconBulb,
+        title: "Best-practice hints",
+        description: "Real-time suggestions as you configure.",
+      },
+      {
+        icon: IconCurrencyDollar,
+        title: "Cost estimation",
+        description: "Rough monthly CI minutes and spend.",
+      },
+      {
+        icon: IconDeviceMobile,
+        title: "Fully responsive",
+        description: "Configure pipelines from desktop or mobile.",
+      },
+      {
+        icon: IconSparkles,
+        title: "Pipeline optimization",
+        description: "Parallel tests, caching, and Docker BuildKit.",
+      },
+    ],
+  },
+];
+
+const spotlight = [
   {
     icon: IconBolt,
-    title: "Instant Generation",
-    description: "Generate CI/CD pipelines in seconds, not hours.",
-  },
-  {
-    icon: IconPuzzle,
-    title: "Multi-Stack Support",
-    description: "Node.js, Python, Java, Go, Rust, and .NET supported.",
-  },
-  {
-    icon: IconRefresh,
-    title: "Multiple CI Providers",
-    description: "GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure Pipelines.",
-  },
-  {
-    icon: IconBrandDocker,
-    title: "Docker Support",
-    description: "Built-in Docker build and push configurations.",
-  },
-  {
-    icon: IconCloud,
-    title: "Deployment Ready",
-    description: "AWS ECS, Kubernetes, Vercel, Netlify, Fly.io, Railway, Cloudflare Pages, DigitalOcean.",
+    title: "Generate in one click",
+    stat: "< 60s",
+    statLabel: "avg. setup time",
   },
   {
     icon: IconShieldLock,
-    title: "Security Best Practices",
-    description: "Security scanning and audit steps built in.",
+    title: "Security by default",
+    stat: "10+",
+    statLabel: "scan & audit options",
   },
   {
-    icon: IconSettings,
-    title: "Environment Variables",
-    description: "Add custom environment variables to your pipelines easily.",
-  },
-  {
-    icon: IconTerminal,
-    title: "Custom Scripts",
-    description: "Insert pre-build, pre-test, and post-build custom commands.",
-  },
-  {
-    icon: IconBell,
-    title: "Smart Notifications",
-    description: "Slack and email notifications for pipeline status updates.",
-  },
-  {
-    icon: IconGitBranch,
-    title: "Matrix Builds",
-    description: "Test across multiple versions simultaneously with parallel jobs.",
-  },
-  {
-    icon: IconPackage,
-    title: "Artifact Management",
-    description: "Upload and store build artifacts with configurable retention.",
-  },
-  {
-    icon: IconClock,
-    title: "Scheduled Pipelines",
-    description: "Run pipelines on a schedule with cron expressions.",
-  },
-  {
-    icon: IconChartBar,
-    title: "Code Quality & Coverage",
-    description: "Set coverage thresholds and quality gates for your code.",
-  },
-  {
-    icon: IconRocket,
-    title: "Performance Testing",
-    description: "Load testing and performance benchmarks for your application.",
-  },
-  {
-    icon: IconDatabase,
-    title: "Database & Services",
-    description: "Configure databases, Redis, and Elasticsearch services.",
-  },
-  {
-    icon: IconGitBranch,
-    title: "Multi-Environment Deployment",
-    description: "Configure dev/staging/prod environments with branch mapping.",
-  },
-  {
-    icon: IconSettings,
-    title: "Deployment Strategies",
-    description: "Rolling, Blue-Green, Canary, and Recreate deployment patterns.",
-  },
-  {
-    icon: IconPackage,
-    title: "Custom Marketplace Actions",
-    description: "Integrate custom GitHub Actions from the marketplace.",
-  },
-  {
-    icon: IconBolt,
-    title: "Pipeline Optimization",
-    description: "Parallel test execution, dependency caching, Docker BuildKit.",
-  },
-  {
-    icon: IconGitBranch,
-    title: "Conditional Execution",
-    description: "Run steps based on branches, file changes, or custom conditions.",
-  },
-  {
-    icon: IconCheck,
-    title: "YAML Validation",
-    description: "Validate generated pipelines for syntax and best practices.",
-  },
-  {
-    icon: IconDeviceFloppy,
-    title: "Configuration Persistence",
-    description: "Save and load your configurations with local storage.",
-  },
-  {
-    icon: IconPalette,
-    title: "Syntax Highlighting",
-    description: "Color-coded YAML output for better readability.",
-  },
-  {
-    icon: IconTemplate,
-    title: "Quick Presets",
-    description: "Pre-configured templates for common use cases.",
-  },
-  {
-    icon: IconUpload,
-    title: "Export/Import",
-    description: "Share configurations as JSON files.",
-  },
-  {
-    icon: IconArrowBackUp,
-    title: "Undo/Redo",
-    description: "Navigate through configuration history with ease.",
-  },
-  {
-    icon: IconBulb,
-    title: "Best Practices Analyzer",
-    description: "Real-time suggestions for optimal pipeline configuration.",
-  },
-  {
-    icon: IconCurrencyDollar,
-    title: "Cost Estimation",
-    description: "Estimate monthly CI/CD costs based on your configuration.",
-  },
-  {
-    icon: IconDeviceMobile,
-    title: "Responsive Design",
-    description: "Fully responsive UI optimized for mobile and desktop.",
+    icon: IconCloud,
+    title: "Deploy anywhere",
+    stat: "12",
+    statLabel: "deploy targets",
   },
 ];
 
 export function Features() {
+  const [activeCategory, setActiveCategory] = useState(featureCategories[0].id);
+  const category =
+    featureCategories.find((c) => c.id === activeCategory) ?? featureCategories[0];
+
   return (
-    <section id="features" className="py-6 sm:py-8 md:py-12 lg:py-16 bg-muted/30">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <Badge variant="secondary" className="mb-2 sm:mb-3">Features</Badge>
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
-            Everything you need for CI/CD
+    <section id="features" className="section-surface relative py-16 sm:py-20 lg:py-24">
+      <div className="generator-grid-bg opacity-50" aria-hidden />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <Badge
+            variant="secondary"
+            className="mb-4 gap-1.5 border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium"
+          >
+            Features
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            Built for real
+            <span className="text-primary"> engineering teams</span>
           </h2>
-          <p className="mt-2 sm:mt-3 md:mt-4 text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-            Built with best practices so you can ship faster and safer.
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
+            From first commit to production deploy — every option you need, nothing you don&apos;t.
           </p>
         </div>
 
-        {/* New Clean List Design */}
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-x-6 sm:gap-x-8 md:gap-x-12 gap-y-3 sm:gap-y-4">
-            {features.map((feature) => {
+        {/* Spotlight bento */}
+        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+          {spotlight.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.title}
+                className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur-sm"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <p className="mt-4 font-mono text-2xl font-bold tracking-tight text-primary">
+                  {item.stat}
+                </p>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {item.statLabel}
+                </p>
+                <h3 className="mt-2 text-sm font-semibold">{item.title}</h3>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Category filter + grid */}
+        <div className="mt-12 overflow-hidden rounded-2xl border border-border/80 bg-card/90 shadow-lg backdrop-blur-sm">
+          <div className="border-b bg-muted/30 px-4 py-4 sm:px-6">
+            <div
+              role="tablist"
+              aria-label="Feature categories"
+              className="flex flex-wrap gap-2"
+            >
+              {featureCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeCategory === cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    activeCategory === cat.id
+                      ? "bg-background text-foreground ring-1 ring-inset ring-border"
+                      : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                  )}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">{category.description}</p>
+          </div>
+
+          <div
+            role="tabpanel"
+            className="grid gap-3 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3"
+          >
+            {category.features.map((feature) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={feature.title}
-                  className="group flex items-start gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-background/50 transition-all"
+                  className="group flex gap-3 rounded-xl border border-border/50 bg-muted/20 p-4 transition-colors hover:border-primary/25 hover:bg-primary/5"
                 >
-                  <div className="flex-shrink-0 mt-0.5">
-                    <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                      <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </div>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                    <Icon className="h-4 w-4" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1 text-foreground">
-                      {feature.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold">{feature.title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                       {feature.description}
                     </p>
-                  </div>
-                  <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <IconCheck className="h-4 w-4 text-primary" />
                   </div>
                 </div>
               );

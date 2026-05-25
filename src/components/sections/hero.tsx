@@ -1,14 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconBolt, IconArrowRight } from "@tabler/icons-react";
+import {
+  IconBolt,
+  IconArrowRight,
+  IconGitBranch,
+  IconShieldCheck,
+  IconClock,
+  IconBrandGithub,
+} from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 
 const examplePipelines = [
   {
     id: "github-actions",
-    label: "GitHub Actions",
+    label: "GitHub",
     filename: ".github/workflows/ci.yml",
     code: `name: CI Pipeline
 
@@ -19,29 +28,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - run: npm ci
       - run: npm test
       - run: npm run build`,
   },
   {
     id: "gitlab-ci",
-    label: "GitLab CI",
+    label: "GitLab",
     filename: ".gitlab-ci.yml",
-    code: `stages:
-  - build
-  - test
-
-variables:
-  NODE_VERSION: "20"
+    code: `stages: [build, test]
 
 image: node:20-alpine
 
@@ -63,28 +63,15 @@ test:
     filename: "Jenkinsfile",
     code: `pipeline {
   agent any
-
-  tools {
-    nodejs 'NodeJS 20'
-  }
-
   stages {
     stage('Install') {
-      steps {
-        sh 'npm ci'
-      }
+      steps { sh 'npm ci' }
     }
-
     stage('Test') {
-      steps {
-        sh 'npm test'
-      }
+      steps { sh 'npm test' }
     }
-
     stage('Build') {
-      steps {
-        sh 'npm run build'
-      }
+      steps { sh 'npm run build' }
     }
   }
 }`,
@@ -95,132 +82,150 @@ test:
     filename: ".circleci/config.yml",
     code: `version: 2.1
 
-orbs:
-  node: circleci/node@5.2
-
 jobs:
   build-and-test:
     docker:
       - image: cimg/node:20.0
     steps:
       - checkout
-      - node/install-packages
-      - run:
-          name: Run tests
-          command: npm test
-      - run:
-          name: Build
-          command: npm run build
-
-workflows:
-  build-test:
-    jobs:
-      - build-and-test`,
+      - run: npm test
+      - run: npm run build`,
   },
   {
     id: "azure-pipelines",
-    label: "Azure Pipelines",
+    label: "Azure",
     filename: "azure-pipelines.yml",
-    code: `trigger:
-  - main
+    code: `trigger: [main]
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: ubuntu-latest
 
 steps:
   - task: NodeTool@0
     inputs:
-      versionSpec: '20'
-
+      versionSpec: "20"
   - script: npm ci
-    displayName: 'Install dependencies'
-
   - script: npm test
-    displayName: 'Run tests'
-
-  - script: npm run build
-    displayName: 'Build'`,
+  - script: npm run build`,
   },
+];
+
+const stats = [
+  { icon: IconGitBranch, label: "5 CI providers" },
+  { icon: IconShieldCheck, label: "Security built-in" },
+  { icon: IconClock, label: "Under 60 seconds" },
 ];
 
 export function Hero() {
   const [selectedPipeline, setSelectedPipeline] = useState(0);
+  const pipeline = examplePipelines[selectedPipeline];
 
   return (
-    <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-16 md:py-24 text-center">
-        <Badge variant="secondary" className="mb-4 sm:mb-6 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium">
-          Open Source CI/CD Pipeline Generator
-        </Badge>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
-          Generate Production-Ready
-          <br />
-          <span className="text-primary">CI/CD Pipelines</span>
-          <br />
-          in Seconds
-        </h1>
-        <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed px-2">
-          Pipeline Forge is a developer-first tool that helps you create
-          optimized, secure, and scalable CI/CD pipelines for modern
-          applications — without writing YAML from scratch.
-        </p>
-        <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row md:flex-row items-center justify-center gap-3 sm:gap-4">
-          <a href="#generator">
-            <Button size="lg" className="gap-2 text-base font-semibold px-8">
-              <IconBolt className="h-5 w-5" />
-              Start Building
-            </Button>
-          </a>
-          <a href="/instructions">
-            <Button variant="secondary" size="lg" className="gap-2 text-base px-8">
-              View Instructions
-              <IconArrowRight className="h-4 w-4" />
-            </Button>
-          </a>
-          <a href="#how-it-works">
-            <Button variant="outline" size="lg" className="gap-2 text-base px-8 hidden sm:flex">
-              Learn More
-            </Button>
-          </a>
-        </div>
+    <section className="section-surface relative overflow-hidden border-b">
+      <div className="generator-grid-bg" aria-hidden />
+      <div className="generator-glow" aria-hidden />
 
-        {/* Example output preview with tabs */}
-        <div className="mt-8 sm:mt-12 md:mt-16 mx-auto max-w-3xl px-2">
-          <div className="rounded-xl border bg-card shadow-lg overflow-hidden">
-            {/* Terminal header with tabs */}
-            <div className="border-b bg-muted/50">
-              <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50">
-                <div className="flex gap-1.5">
-                  <div className="h-3 w-3 rounded-full bg-red-400" />
-                  <div className="h-3 w-3 rounded-full bg-yellow-400" />
-                  <div className="h-3 w-3 rounded-full bg-green-400" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14 xl:gap-16">
+          {/* Copy */}
+          <div className="text-center lg:text-left">
+            <Badge
+              variant="secondary"
+              className="mb-5 gap-1.5 border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium"
+            >
+              <IconBrandGithub className="h-3.5 w-3.5 text-primary" />
+              Open source · Developer-first
+            </Badge>
+
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl xl:text-[3.25rem] xl:leading-[1.1]">
+              Production-ready
+              <span className="block text-primary">CI/CD pipelines</span>
+              without YAML fatigue
+            </h1>
+
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
+              Pipeline Forge turns your stack, provider, and deployment choices into
+              optimized YAML — with security scans, caching, and best-practice hints
+              baked in.
+            </p>
+
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
+              <Button size="lg" className="w-full gap-2 font-semibold sm:w-auto" asChild>
+                <a href="#generator">
+                  <IconBolt className="h-5 w-5" />
+                  Open Pipeline Studio
+                </a>
+              </Button>
+              <Button variant="outline" size="lg" className="w-full gap-2 sm:w-auto" asChild>
+                <Link href="/instructions">
+                  View docs
+                  <IconArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
+              {stats.map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm"
+                >
+                  <Icon className="h-3.5 w-3.5 text-primary" />
+                  {label}
                 </div>
-                <span className="ml-2 text-xs text-muted-foreground font-mono">
-                  {examplePipelines[selectedPipeline].filename}
+              ))}
+            </div>
+          </div>
+
+          {/* Terminal preview */}
+          <div className="mx-auto w-full max-w-xl lg:max-w-none">
+            <div className="mb-3 flex items-center justify-between gap-2 px-1">
+              <p className="text-xs font-medium text-muted-foreground">Live preview</p>
+              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:text-emerald-400">
+                Example output
+              </span>
+            </div>
+
+            <div className="terminal-chrome shadow-2xl">
+              <div className="terminal-titlebar">
+                <span className="terminal-dot bg-[#ff5f57]" />
+                <span className="terminal-dot bg-[#febc2e]" />
+                <span className="terminal-dot bg-[#28c840]" />
+                <span className="ml-2 truncate font-mono text-[11px] text-muted-foreground dark:text-white/70">
+                  {pipeline.filename}
                 </span>
               </div>
-              {/* Tabs */}
-              <div className="flex gap-1 px-2 py-1.5 overflow-x-auto scrollbar-hide">
-                {examplePipelines.map((pipeline, index) => (
-                  <button
-                    key={pipeline.id}
-                    onClick={() => setSelectedPipeline(index)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
-                      selectedPipeline === index
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                    }`}
-                  >
-                    {pipeline.label}
-                  </button>
-                ))}
+
+              <div className="border-b border-border bg-muted/60 px-2 py-2 dark:border-white/10 dark:bg-[oklch(0.22_0.02_322)]">
+                <div
+                  role="tablist"
+                  aria-label="Example CI providers"
+                  className="flex gap-1 overflow-x-auto scrollbar-hide"
+                >
+                  {examplePipelines.map((p, index) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selectedPipeline === index}
+                      onClick={() => setSelectedPipeline(index)}
+                      className={cn(
+                        "shrink-0 rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors",
+                        selectedPipeline === index
+                          ? "bg-background text-foreground ring-1 ring-inset ring-border dark:bg-white/15 dark:text-white dark:ring-white/20"
+                          : "text-muted-foreground hover:bg-background/80 hover:text-foreground dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white/80"
+                      )}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              <pre className="terminal-code-area code-scrollbar max-h-56 overflow-auto p-4 text-left text-xs font-mono leading-relaxed sm:max-h-72 sm:text-[13px]">
+                <code>{pipeline.code}</code>
+              </pre>
             </div>
-            {/* Code display */}
-            <pre className="p-3 sm:p-4 text-left text-xs sm:text-sm font-mono text-foreground/80 overflow-auto max-h-64 sm:max-h-80 md:max-h-96 leading-relaxed">
-              <code>{examplePipelines[selectedPipeline].code}</code>
-            </pre>
           </div>
         </div>
       </div>
