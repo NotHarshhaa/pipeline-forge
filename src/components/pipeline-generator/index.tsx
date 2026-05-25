@@ -76,6 +76,7 @@ export function PipelineGenerator() {
           <OutputPanel
             config={ctx.config}
             output={ctx.output}
+            validation={ctx.validation}
             copied={ctx.copied}
             onCopy={ctx.handleCopy}
             onDownload={ctx.handleDownload}

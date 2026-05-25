@@ -1,4 +1,4 @@
-import type { PipelineConfig } from "@/lib/generate-pipeline";
+import type { PipelineConfig, ValidationResult } from "@/lib/generate-pipeline";
 import type { CostEstimate } from "./utils/estimate-cost";
 import type { Suggestion } from "./utils/analyze-best-practices";
 
@@ -11,6 +11,7 @@ export interface PipelineGeneratorContext {
   config: PipelineConfig;
   updateConfig: UpdateConfigFn;
   output: string;
+  validation: ValidationResult | null;
   copied: boolean;
   savedConfigs: Record<string, PipelineConfig>;
   currentConfigName: string;

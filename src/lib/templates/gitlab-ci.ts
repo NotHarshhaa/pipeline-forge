@@ -75,7 +75,7 @@ export function generateGitLabCI(c: PipelineConfig): string {
 
   if (c.enableCaching) {
     lines.push("cache:");
-    lines.push("  key: ${CI_COMMIT_REF_SLUG}");
+    lines.push('  key: "$CI_COMMIT_REF_SLUG"');
     lines.push("  paths:");
     lines.push(...getGitLabCachePaths(c));
     lines.push("");
@@ -84,13 +84,22 @@ export function generateGitLabCI(c: PipelineConfig): string {
   lines.push("build:");
   lines.push("  stage: build");
   lines.push("  script:");
-  // Add working directory change
   if (c.workingDirectory && c.workingDirectory !== ".") {
     lines.push(`    - cd ${c.workingDirectory}`);
   }
   lines.push(...getGitLabInstallScript(c));
   if (c.enableBuild) {
     lines.push(...getGitLabBuildScript(c));
+  }
+  if (c.artifacts?.enabled && c.artifacts.paths?.length) {
+    lines.push("  artifacts:");
+    lines.push("    paths:");
+    for (const artifactPath of c.artifacts.paths) {
+      lines.push(`      - ${artifactPath}`);
+    }
+    if (c.artifacts.retention) {
+      lines.push(`    expire_in: ${c.artifacts.retention} days`);
+    }
   }
   lines.push("");
 
@@ -239,22 +248,6 @@ export function generateGitLabCI(c: PipelineConfig): string {
       lines.push("      when: manual");
       lines.push("");
     }
-  }
-
-  if (c.artifacts?.enabled && c.artifacts.paths?.length) {
-    lines.push("artifacts:");
-    lines.push("  stage: build");
-    lines.push("  script:");
-    lines.push("    - echo 'Collecting build artifacts'");
-    lines.push("  artifacts:");
-    lines.push("    paths:");
-    for (const artifactPath of c.artifacts.paths) {
-      lines.push(`      - ${artifactPath}`);
-    }
-    if (c.artifacts.retention) {
-      lines.push(`    expire_in: ${c.artifacts.retention} days`);
-    }
-    lines.push("");
   }
 
   return lines.join("\n");

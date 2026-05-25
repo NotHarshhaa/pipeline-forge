@@ -16,7 +16,9 @@ import {
   highlightYAML,
   type HighlightTheme,
 } from "../utils/highlight-yaml";
+import type { ValidationResult } from "@/lib/generate-pipeline";
 import { cn } from "@/lib/utils";
+import { OutputValidation } from "./output-validation";
 
 const FILENAME_MAP: Record<PipelineConfig["ciProvider"], string> = {
   "github-actions": ".github/workflows/ci.yml",
@@ -29,6 +31,7 @@ const FILENAME_MAP: Record<PipelineConfig["ciProvider"], string> = {
 interface OutputPanelProps {
   config: PipelineConfig;
   output: string;
+  validation: ValidationResult | null;
   copied: boolean;
   onCopy: () => void;
   onDownload: () => void;
@@ -38,6 +41,7 @@ interface OutputPanelProps {
 export function OutputPanel({
   config,
   output,
+  validation,
   copied,
   onCopy,
   onDownload,
@@ -103,6 +107,8 @@ export function OutputPanel({
           </div>
         )}
       </div>
+
+      <OutputValidation validation={validation} />
 
       <div className="flex-1 p-3 sm:p-4 min-h-[320px] lg:min-h-0">
         <div className="terminal-chrome h-full flex flex-col min-h-[280px] lg:min-h-[calc(100vh-16rem)] lg:max-h-[calc(100vh-12rem)]">

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:pipeline": "npx --yes tsx scripts/verify-pipeline-output.ts"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.41.1",

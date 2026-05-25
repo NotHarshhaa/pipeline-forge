@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { generatePipeline, type PipelineConfig } from "@/lib/generate-pipeline";
+import {
+  generatePipeline,
+  validatePipelineConfig,
+  validateYAML,
+  type PipelineConfig,
+  type ValidationResult,
+} from "@/lib/generate-pipeline";
 import { DEFAULT_PIPELINE_CONFIG } from "../constants/default-config";
 import { presets, presetLabels } from "../constants/presets";
 import { steps } from "../constants/options";
@@ -12,6 +18,7 @@ import type { PipelineGeneratorContext } from "../types";
 export function usePipelineGenerator(): PipelineGeneratorContext {
   const [config, setConfig] = useState<PipelineConfig>(DEFAULT_PIPELINE_CONFIG);
   const [output, setOutput] = useState<string>("");
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [copied, setCopied] = useState(false);
   const [savedConfigs, setSavedConfigs] = useState<Record<string, PipelineConfig>>({});
   const [currentConfigName, setCurrentConfigName] = useState<string>("");
@@ -87,6 +94,7 @@ export function usePipelineGenerator(): PipelineGeneratorContext {
       setConfig(DEFAULT_PIPELINE_CONFIG);
       setCurrentConfigName("");
       setOutput("");
+      setValidation(null);
     }
   }, []);
 
@@ -101,6 +109,7 @@ export function usePipelineGenerator(): PipelineGeneratorContext {
       setConfig((prev) => ({ ...prev, ...preset }));
       setCurrentConfigName("");
       setOutput("");
+      setValidation(null);
     }
   }, []);
 
@@ -134,6 +143,7 @@ export function usePipelineGenerator(): PipelineGeneratorContext {
               setConfig(imported);
               setCurrentConfigName("");
               setOutput("");
+              setValidation(null);
             }
           } catch {
             alert(
@@ -183,7 +193,24 @@ export function usePipelineGenerator(): PipelineGeneratorContext {
 
   const handleGenerate = useCallback(() => {
     const yaml = generatePipeline(config);
+    const yamlResult = validateYAML(yaml, config.ciProvider);
+    const configIssues = validatePipelineConfig(config);
+
+    const errors = [
+      ...configIssues.filter((issue) => issue.severity === "error"),
+      ...yamlResult.errors,
+    ];
+    const warnings = [
+      ...configIssues.filter((issue) => issue.severity === "warning"),
+      ...yamlResult.warnings,
+    ];
+
     setOutput(yaml);
+    setValidation({
+      valid: errors.length === 0,
+      errors,
+      warnings,
+    });
   }, [config]);
 
   const handleCopy = useCallback(async () => {
@@ -256,6 +283,7 @@ export function usePipelineGenerator(): PipelineGeneratorContext {
     config,
     updateConfig,
     output,
+    validation,
     copied,
     savedConfigs,
     currentConfigName,
