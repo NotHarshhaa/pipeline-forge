@@ -1,9 +1,9 @@
-// @ts-nocheck - This file generates Azure Pipelines YAML syntax
 import { PipelineConfig } from "../types";
+import { getNodeInstallCommand, getNodeRunPrefix, getPrimaryBranch, indent } from "./shared";
 
 export function generateAzurePipelines(c: PipelineConfig): string {
   const lines: string[] = [];
-  const indent = (n: number) => "  ".repeat(n);
+  const primaryBranch = getPrimaryBranch(c);
 
   lines.push(`# ${c.projectName} Azure Pipeline`);
   lines.push("");
@@ -97,7 +97,9 @@ export function generateAzurePipelines(c: PipelineConfig): string {
     lines.push("  - stage: Docker");
     lines.push("    displayName: 'Docker Build and Push'");
     lines.push("    dependsOn: Build");
-    lines.push("    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))");
+    lines.push(
+      `    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/${primaryBranch}'))`
+    );
     lines.push("    jobs:");
     lines.push("      - job: DockerJob");
     lines.push("        displayName: 'Docker Job'");
@@ -108,7 +110,9 @@ export function generateAzurePipelines(c: PipelineConfig): string {
     lines.push("              containerRegistry: 'DockerHub'");
     lines.push("              repository: '$(dockerImageName)'");
     lines.push("              command: 'buildAndPush'");
-    lines.push("              Dockerfile: '$(Build.SourcesDirectory)/Dockerfile'");
+    lines.push(
+      `              Dockerfile: '$(Build.SourcesDirectory)/${(c.dockerfilePath || "Dockerfile").replace(/^\.\//, "")}'`
+    );
     lines.push("              tags: |");
     lines.push("                $(Build.BuildId)");
     lines.push("                latest");
@@ -120,7 +124,9 @@ export function generateAzurePipelines(c: PipelineConfig): string {
     lines.push("  - stage: Deploy");
     lines.push("    displayName: 'Deploy to Production'");
     lines.push(`    dependsOn: ${dependsOn}`);
-    lines.push("    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))");
+    lines.push(
+      `    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/${primaryBranch}'))`
+    );
     lines.push("    jobs:");
     lines.push("      - deployment: DeployJob");
     lines.push("        displayName: 'Deploy Job'");
@@ -270,7 +276,7 @@ function getAzureInstallSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth)}    npm ci`);
+      lines.push(`${indent(depth)}    ${getNodeInstallCommand(c)}`);
       break;
     case "python":
       lines.push(`${indent(depth)}    python -m pip install --upgrade pip`);
@@ -308,7 +314,7 @@ function getAzureLintSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth)}    npm run lint`);
+      lines.push(`${indent(depth)}    ${getNodeRunPrefix(c)} lint`);
       break;
     case "python":
       lines.push(`${indent(depth)}    pip install flake8`);
@@ -437,7 +443,7 @@ function getAzureBuildSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth)}    npm run build`);
+      lines.push(`${indent(depth)}    ${getNodeRunPrefix(c)} build`);
       break;
     case "python":
       lines.push(`${indent(depth)}    python setup.py sdist bdist_wheel`);
@@ -474,7 +480,7 @@ function getAzureFormatSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth)}    npm run format:check`);
+      lines.push(`${indent(depth)}    ${getNodeRunPrefix(c)} format:check`);
       break;
     case "python":
       lines.push(`${indent(depth)}    pip install black`);

@@ -1,9 +1,8 @@
-// @ts-nocheck - This file generates Jenkins pipeline syntax
 import { PipelineConfig } from "../types";
+import { getNodeInstallCommand, getNodeRunPrefix, getPrimaryBranch, indent } from "./shared";
 
 export function generateJenkins(c: PipelineConfig): string {
   const lines: string[] = [];
-  const indent = (n: number) => "  ".repeat(n);
 
   lines.push("pipeline {");
   lines.push(`${indent(1)}agent any`);
@@ -32,6 +31,8 @@ export function generateJenkins(c: PipelineConfig): string {
     lines.push(`${indent(1)}tools {`);
     if (c.projectType === "nodejs") {
       lines.push(`${indent(2)}nodejs 'NodeJS ${c.nodeVersion || "20"}'`);
+    } else if (c.projectType === "python") {
+      lines.push(`${indent(2)}python 'Python-${c.pythonVersion || "3.12"}'`);
     } else if (c.projectType === "java") {
       lines.push(`${indent(2)}maven 'Maven 3.9'`);
       lines.push(`${indent(2)}jdk 'JDK ${c.javaVersion || "17"}'`);
@@ -174,7 +175,7 @@ export function generateJenkins(c: PipelineConfig): string {
   if (c.enableDocker) {
     lines.push(`${indent(2)}stage('Docker Build & Push') {`);
     lines.push(`${indent(3)}when {`);
-    lines.push(`${indent(4)}branch '${c.branches[0] || "main"}'`);
+    lines.push(`${indent(4)}branch '${getPrimaryBranch(c)}'`);
     lines.push(`${indent(3)}}`);
     lines.push(`${indent(3)}steps {`);
     lines.push(`${indent(4)}script {`);
@@ -205,7 +206,7 @@ export function generateJenkins(c: PipelineConfig): string {
     } else {
       lines.push(`${indent(2)}stage('Deploy') {`);
       lines.push(`${indent(3)}when {`);
-      lines.push(`${indent(4)}branch '${c.branches[0] || "main"}'`);
+      lines.push(`${indent(4)}branch '${getPrimaryBranch(c)}'`);
       lines.push(`${indent(3)}}`);
       lines.push(`${indent(3)}steps {`);
       lines.push(...getJenkinsDeploySteps(c, 4, "production"));
@@ -240,10 +241,7 @@ function getJenkinsInstallSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      const installCmd = c.packageManager === "yarn" ? "yarn install --frozen-lockfile" :
-                        c.packageManager === "pnpm" ? "pnpm install --frozen-lockfile" :
-                        c.packageManager === "bun" ? "bun install" : "npm ci";
-      lines.push(`${indent(depth + 1)}sh '${installCmd}'`);
+      lines.push(`${indent(depth + 1)}sh '${getNodeInstallCommand(c)}'`);
       if (c.isMonorepo && c.monorepoTool) {
         lines.push(`${indent(depth + 1)}sh 'npx ${c.monorepoTool}@latest install'`);
       }
@@ -289,7 +287,7 @@ function getJenkinsLintSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth)}sh 'npm run lint'`);
+      lines.push(`${indent(depth)}sh '${getNodeRunPrefix(c)} lint'`);
       break;
     case "python":
       lines.push(`${indent(depth)}sh 'pip install flake8 && flake8 .'`);
@@ -384,7 +382,7 @@ function getJenkinsBuildSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth)}sh 'npm run build'`);
+      lines.push(`${indent(depth)}sh '${getNodeRunPrefix(c)} build'`);
       break;
     case "python":
       lines.push(`${indent(depth)}sh 'python setup.py sdist bdist_wheel'`);
@@ -411,10 +409,7 @@ function getJenkinsFormatSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      const formatCmd = c.packageManager === "yarn" ? "yarn format:check" :
-                        c.packageManager === "pnpm" ? "pnpm format:check" :
-                        c.packageManager === "bun" ? "bun run format:check" : "npm run format:check";
-      lines.push(`${indent(depth)}sh '${formatCmd}'`);
+      lines.push(`${indent(depth)}sh '${getNodeRunPrefix(c)} format:check'`);
       break;
     case "python":
       lines.push(`${indent(depth)}sh 'pip install black && black --check .'`);
@@ -527,9 +522,9 @@ function getJenkinsDeploySteps(c: PipelineConfig, depth: number, environment: st
     case "aws":
       lines.push(`${indent(depth)}withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {`);
       lines.push(`${indent(depth + 1)}sh '''`);
-      lines.push(`${indent(depth + 2)}aws ecs update-service --cluster \\${AWS_CLUSTER} --service \\${AWS_SERVICE} --force-new-deployment`);
+      lines.push(`${indent(depth + 2)}aws ecs update-service --cluster \${AWS_CLUSTER} --service \${AWS_SERVICE} --force-new-deployment`);
       if (c.deploymentStrategy === "rolling") {
-        lines.push(`${indent(depth + 2)}aws ecs update-service --cluster \\${AWS_CLUSTER} --service \\${AWS_SERVICE} --deployment-configuration maximumPercent=200,minimumHealthyPercent=100`);
+        lines.push(`${indent(depth + 2)}aws ecs update-service --cluster \${AWS_CLUSTER} --service \${AWS_SERVICE} --deployment-configuration maximumPercent=200,minimumHealthyPercent=100`);
       }
       lines.push(`${indent(depth + 1)}'''`);
       lines.push(`${indent(depth)}}`);
@@ -538,7 +533,7 @@ function getJenkinsDeploySteps(c: PipelineConfig, depth: number, environment: st
       lines.push(`${indent(depth)}sh '''`);
       lines.push(`${indent(depth + 1)}kubectl apply -f k8s/`);
       if (c.deploymentStrategy === "rolling") {
-        lines.push(`${indent(depth + 1)}kubectl rollout status deployment/\\${K8S_DEPLOYMENT}`);
+        lines.push(`${indent(depth + 1)}kubectl rollout status deployment/\${K8S_DEPLOYMENT}`);
       } else if (c.deploymentStrategy === "canary") {
         lines.push(`${indent(depth + 1)}kubectl apply -f k8s/canary/`);
       } else if (c.deploymentStrategy === "blue-green") {

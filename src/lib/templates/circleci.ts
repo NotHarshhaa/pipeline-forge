@@ -1,9 +1,15 @@
-// @ts-nocheck - This file generates CircleCI YAML syntax
 import { PipelineConfig } from "../types";
+import {
+  getNodeInstallCommand,
+  getNodeLockfile,
+  getNodeRunPrefix,
+  getPrimaryBranch,
+  indent,
+} from "./shared";
 
 export function generateCircleCI(c: PipelineConfig): string {
   const lines: string[] = [];
-  const indent = (n: number) => "  ".repeat(n);
+  const primaryBranch = getPrimaryBranch(c);
 
   lines.push("version: 2.1");
   lines.push("");
@@ -169,7 +175,8 @@ export function generateCircleCI(c: PipelineConfig): string {
     lines.push(`${indent(5)}- build-and-test`);
     lines.push(`${indent(4)}filters:`);
     lines.push(`${indent(5)}branches:`);
-    lines.push(`${indent(6)}only: ${c.branches[0] || "main"}`);
+    lines.push(`${indent(6)}only:`);
+    lines.push(`${indent(7)}- ${primaryBranch}`);
   }
 
   if (c.deployTarget !== "none") {
@@ -179,7 +186,8 @@ export function generateCircleCI(c: PipelineConfig): string {
     lines.push(`${indent(5)}- ${requiresJob}`);
     lines.push(`${indent(4)}filters:`);
     lines.push(`${indent(5)}branches:`);
-    lines.push(`${indent(6)}only: ${c.branches[0] || "main"}`);
+    lines.push(`${indent(6)}only:`);
+    lines.push(`${indent(7)}- ${primaryBranch}`);
   }
 
   return lines.join("\n");
@@ -204,9 +212,11 @@ function getCircleCICacheRestore(c: PipelineConfig, depth: number): string[] {
   lines.push(`${indent(depth)}- restore_cache:`);
   lines.push(`${indent(depth + 1)}keys:`);
   
+  const lockfile = c.projectType === "nodejs" ? getNodeLockfile(c) : "package-lock.json";
+
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth + 2)}- node-deps-{{ checksum "package-lock.json" }}`);
+      lines.push(`${indent(depth + 2)}- node-deps-{{ checksum "${lockfile}" }}`);
       lines.push(`${indent(depth + 2)}- node-deps-`);
       break;
     case "python":
@@ -234,7 +244,7 @@ function getCircleCICacheSave(c: PipelineConfig, depth: number): string[] {
   
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth + 1)}key: node-deps-{{ checksum "package-lock.json" }}`);
+      lines.push(`${indent(depth + 1)}key: node-deps-{{ checksum "${getNodeLockfile(c)}" }}`);
       lines.push(`${indent(depth + 1)}paths:`);
       lines.push(`${indent(depth + 2)}- node_modules`);
       break;
@@ -274,7 +284,7 @@ function getCircleCIInstallSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth + 2)}npm ci`);
+      lines.push(`${indent(depth + 2)}${getNodeInstallCommand(c)}`);
       break;
     case "python":
       lines.push(`${indent(depth + 2)}python -m pip install --upgrade pip`);
@@ -307,7 +317,7 @@ function getCircleCILintSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth + 2)}npm run lint`);
+      lines.push(`${indent(depth + 2)}${getNodeRunPrefix(c)} lint`);
       break;
     case "python":
       lines.push(`${indent(depth + 2)}pip install flake8`);
@@ -421,7 +431,7 @@ function getCircleCIBuildSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth + 2)}npm run build`);
+      lines.push(`${indent(depth + 2)}${getNodeRunPrefix(c)} build`);
       break;
     case "python":
       lines.push(`${indent(depth + 2)}python setup.py sdist bdist_wheel`);
@@ -453,7 +463,7 @@ function getCircleCIFormatSteps(c: PipelineConfig, depth: number): string[] {
 
   switch (c.projectType) {
     case "nodejs":
-      lines.push(`${indent(depth + 2)}npm run format:check`);
+      lines.push(`${indent(depth + 2)}${getNodeRunPrefix(c)} format:check`);
       break;
     case "python":
       lines.push(`${indent(depth + 2)}pip install black`);

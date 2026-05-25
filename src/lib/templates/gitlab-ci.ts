@@ -1,6 +1,10 @@
-// @ts-nocheck - This file generates GitLab CI YAML with template syntax
-// TypeScript errors are expected and intentional - the file outputs literal YAML template strings
 import { PipelineConfig } from "../types";
+import {
+  getGitLabCachePaths,
+  getNodeInstallCommand,
+  getNodeRunPrefix,
+  getPrimaryBranch,
+} from "./shared";
 
 export function generateGitLabCI(c: PipelineConfig): string {
   const lines: string[] = [];
@@ -42,32 +46,37 @@ export function generateGitLabCI(c: PipelineConfig): string {
   if (c.isMonorepo && c.monorepoTool) {
     lines.push(`  MONOREPO_TOOL: "${c.monorepoTool}"`);
   }
+  if (c.environmentVariables?.length) {
+    for (const { key, value } of c.environmentVariables) {
+      if (key.trim()) {
+        lines.push(`  ${key}: "${value.replace(/"/g, '\\"')}"`);
+      }
+    }
+  }
   lines.push("");
 
   const image = getGitLabImage(c);
   lines.push(`image: ${image}`);
   lines.push("");
 
-  // Add timeout
-  if (c.ciSettings?.timeout) {
-    lines.push(`default:`);
-    lines.push(`  timeout: ${c.ciSettings.timeout * 60}s`);
-    lines.push("");
-  }
-
-  // Add retry on failure
-  if (c.ciSettings?.retryOnFailure) {
-    lines.push(`default:`);
-    lines.push(`  retry:`);
-    lines.push(`    max: 2`);
-    lines.push(`    when:`);
-    lines.push(`      - script_failure`);
+  if (c.ciSettings?.timeout || c.ciSettings?.retryOnFailure) {
+    lines.push("default:");
+    if (c.ciSettings?.timeout) {
+      lines.push(`  timeout: ${c.ciSettings.timeout}m`);
+    }
+    if (c.ciSettings?.retryOnFailure) {
+      lines.push("  retry:");
+      lines.push("    max: 2");
+      lines.push("    when:");
+      lines.push("      - script_failure");
+    }
     lines.push("");
   }
 
   if (c.enableCaching) {
     lines.push("cache:");
-    lines.push(`  paths:`);
+    lines.push("  key: ${CI_COMMIT_REF_SLUG}");
+    lines.push("  paths:");
     lines.push(...getGitLabCachePaths(c));
     lines.push("");
   }
@@ -225,11 +234,27 @@ export function generateGitLabCI(c: PipelineConfig): string {
       lines.push("  stage: deploy");
       lines.push("  script:");
       lines.push(...getGitLabDeployScript(c, "production"));
-      lines.push("  only:");
-      lines.push("    - main");
-      lines.push("  when: manual");
+      lines.push("  rules:");
+      lines.push(`    - if: $CI_COMMIT_BRANCH == "${getPrimaryBranch(c)}"`);
+      lines.push("      when: manual");
       lines.push("");
     }
+  }
+
+  if (c.artifacts?.enabled && c.artifacts.paths?.length) {
+    lines.push("artifacts:");
+    lines.push("  stage: build");
+    lines.push("  script:");
+    lines.push("    - echo 'Collecting build artifacts'");
+    lines.push("  artifacts:");
+    lines.push("    paths:");
+    for (const artifactPath of c.artifacts.paths) {
+      lines.push(`      - ${artifactPath}`);
+    }
+    if (c.artifacts.retention) {
+      lines.push(`    expire_in: ${c.artifacts.retention} days`);
+    }
+    lines.push("");
   }
 
   return lines.join("\n");
@@ -247,34 +272,15 @@ function getGitLabImage(c: PipelineConfig): string {
   }
 }
 
-function getGitLabCachePaths(c: PipelineConfig): string[] {
-  switch (c.projectType) {
-    case "nodejs":
-      const cachePath = c.packageManager === "pnpm" ? ".pnpm-store" :
-                      c.packageManager === "yarn" ? ".yarn/cache" : "node_modules";
-      const paths = [`    - ${cachePath}/`];
-      if (c.isMonorepo && c.monorepoTool) {
-        paths.push(`    - .${c.monorepoTool}/cache/`);
-      }
-      return paths;
-    case "python": return ["    - .cache/pip/"];
-    case "java": return ["    - .m2/repository/"];
-    case "go": return ["    - /go/pkg/mod/"];
-    default: return [];
-  }
-}
-
 function getGitLabInstallScript(c: PipelineConfig): string[] {
   switch (c.projectType) {
-    case "nodejs":
-      const installCmd = c.packageManager === "yarn" ? "yarn install --frozen-lockfile" :
-                        c.packageManager === "pnpm" ? "pnpm install --frozen-lockfile" :
-                        c.packageManager === "bun" ? "bun install" : "npm ci";
-      const scripts = [`    - ${installCmd}`];
-      if (c.isMonorepo && c.monorepoTool) {
-        scripts.push(`    - npx ${c.monorepoTool}@latest install`);
+    case "nodejs": {
+      const scripts = [`    - ${getNodeInstallCommand(c)}`];
+      if (c.isMonorepo && c.monorepoTool && c.monorepoTool !== "none") {
+        scripts.push(`    - npx ${c.monorepoTool} run-many --target=build --dry-run || true`);
       }
       return scripts;
+    }
     case "python":
       if (c.packageManager === "poetry") {
         return ["    - pip install poetry", "    - poetry install"];
@@ -294,7 +300,7 @@ function getGitLabInstallScript(c: PipelineConfig): string[] {
 
 function getGitLabBuildScript(c: PipelineConfig): string[] {
   switch (c.projectType) {
-    case "nodejs": return ["    - npm run build"];
+    case "nodejs": return [`    - ${getNodeRunPrefix(c)} build`];
     case "python": return ["    - python setup.py sdist bdist_wheel"];
     case "java": return ["    - mvn package -DskipTests"];
     case "go": return ["    - go build ./..."];
@@ -306,7 +312,7 @@ function getGitLabBuildScript(c: PipelineConfig): string[] {
 
 function getGitLabLintScript(c: PipelineConfig): string[] {
   switch (c.projectType) {
-    case "nodejs": return ["    - npm run lint"];
+    case "nodejs": return [`    - ${getNodeRunPrefix(c)} lint`];
     case "python": return ["    - pip install flake8", "    - flake8 ."];
     case "java": return ["    - mvn checkstyle:check"];
     case "go": return ["    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest", "    - golangci-lint run"];
@@ -350,10 +356,7 @@ function getGitLabSecurityScript(c: PipelineConfig): string[] {
 function getGitLabFormatScript(c: PipelineConfig): string[] {
   switch (c.projectType) {
     case "nodejs":
-      const formatCmd = c.packageManager === "yarn" ? "yarn format:check" :
-                        c.packageManager === "pnpm" ? "pnpm format:check" :
-                        c.packageManager === "bun" ? "bun run format:check" : "npm run format:check";
-      return [`    - ${formatCmd}`];
+      return [`    - ${getNodeRunPrefix(c)} format:check`];
     case "python": return ["    - pip install black", "    - black --check ."];
     case "java": return ["    - mvn spotless:check"];
     case "go": return ["    - gofmt -l ."];
