@@ -1,4 +1,4 @@
-type HighlightTheme = "light" | "dark";
+export type HighlightTheme = "light" | "dark";
 
 const THEME_CLASSES: Record<
   HighlightTheme,
