@@ -1,37 +1,64 @@
-import { IconBolt, IconStar } from "@tabler/icons-react";
+import Link from "next/link";
+import { IconBolt, IconBrandGithub, IconSparkles } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export function CTA() {
   return (
-    <section className="py-6 sm:py-8 md:py-12 lg:py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-2 sm:mb-3 md:mb-4 px-2">
-            Ready to simplify your DevOps?
-          </h2>
-          <p className="text-xs sm:text-sm md:text-base lg:text-lg text-muted-foreground mb-4 sm:mb-6 md:mb-8 px-2">
-            Stop writing YAML from scratch. Generate production-ready
-            pipelines in seconds.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4">
-            <a href="#generator" className="w-full sm:w-auto">
-              <Button size="lg" className="gap-2 text-sm sm:text-base md:text-base font-semibold px-6 sm:px-8 w-full sm:w-auto">
-                <IconBolt className="h-4 w-4 sm:h-5 sm:w-5" />
-                Generate Now
-              </Button>
-            </a>
-            <a
-              href="https://github.com/NotHarshhaa/pipeline-forge"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto"
-            >
-              <Button variant="outline" size="lg" className="gap-2 text-sm sm:text-base md:text-base px-6 sm:px-8 w-full sm:w-auto">
-                <IconStar className="h-4 w-4" />
-                Star on GitHub
-              </Button>
-            </a>
+    <section className="section-surface relative py-16 sm:py-20 lg:py-24">
+      <div className="generator-grid-bg" aria-hidden />
+      <div className="generator-glow" aria-hidden />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/10 via-card/90 to-card/80 p-8 text-center shadow-xl backdrop-blur-sm sm:p-12 lg:p-14">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-inset ring-primary/20">
+            <IconSparkles className="h-7 w-7" />
           </div>
+
+          <Badge
+            variant="secondary"
+            className="mx-auto mt-6 gap-1.5 border-primary/20 bg-background/60 px-3 py-1 text-xs"
+          >
+            Start in under a minute
+          </Badge>
+
+          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+            Ready to simplify your
+            <span className="text-primary"> DevOps workflow?</span>
+          </h2>
+
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Stop writing YAML from scratch. Open Pipeline Studio, pick a preset,
+            and export a production-ready pipeline today.
+          </p>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button size="lg" className="w-full gap-2 font-semibold sm:w-auto" asChild>
+              <Link href="/#generator">
+                <IconBolt className="h-5 w-5" />
+                Open Pipeline Studio
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full gap-2 border-primary/20 bg-background/50 sm:w-auto"
+              asChild
+            >
+              <a
+                href="https://github.com/NotHarshhaa/pipeline-forge"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <IconBrandGithub className="h-5 w-5" />
+                Star on GitHub
+              </a>
+            </Button>
+          </div>
+
+          <p className="mt-6 text-xs text-muted-foreground">
+            Free · Open source · Runs in your browser
+          </p>
         </div>
       </div>
     </section>

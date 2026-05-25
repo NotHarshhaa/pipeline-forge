@@ -1,65 +1,121 @@
-import { IconBrandGithub, IconStar } from "@tabler/icons-react";
+import Link from "next/link";
+import {
+  IconBrandGithub,
+  IconStar,
+  IconUser,
+  IconGitBranch,
+} from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
+const highlights = [
+  "Cloud & DevOps engineer",
+  "Platform engineering focus",
+  "Open-source contributor",
+];
 
 export function Creator() {
   return (
-    <section id="creator" className="py-6 sm:py-8 md:py-12 lg:py-16 bg-muted/30">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <Badge variant="secondary" className="mb-2 sm:mb-3">Meet the Creator</Badge>
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
-            Built by a passionate engineer
-          </h2>
+    <section id="creator" className="section-surface relative border-y py-16 sm:py-20 lg:py-24">
+      <div className="generator-grid-bg opacity-40" aria-hidden />
+      <div className="generator-glow opacity-50" aria-hidden />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center lg:mx-0 lg:text-left">
+          <Badge
+            variant="secondary"
+            className="mb-4 gap-1.5 border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium"
+          >
+            <IconUser className="h-3.5 w-3.5 text-primary" />
+            Creator
+          </Badge>
         </div>
-        <div className="mx-auto max-w-2xl sm:max-w-3xl md:max-w-3xl lg:max-w-4xl">
-          <Card className="overflow-hidden">
-            <CardContent className="p-3 sm:p-6 md:p-8">
-              <div className="flex flex-col items-center text-center space-y-3 sm:space-y-4">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-2xl" />
-                  <img
-                    src="https://github.com/NotHarshhaa.png"
-                    alt="Harshhaa"
-                    className="relative w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full border-4 border-primary/20 shadow-lg"
-                  />
-                </div>
-                <div className="space-y-2 sm:space-y-3">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-wider">
-                    H A R S H H A A
-                  </h3>
-                  <p className="text-xs sm:text-sm md:text-base text-muted-foreground max-w-lg leading-relaxed">
-                    Development Platform & Automation Enthusiast | Cloud, DevOps & MLops Engineer | Platform Engineering
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pt-2 sm:pt-4 w-full sm:w-auto">
-                  <a
-                    href="https://github.com/NotHarshhaa"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto"
-                  >
-                    <Button variant="default" className="gap-2 w-full sm:w-auto text-xs sm:text-sm">
-                      <IconBrandGithub className="h-4 w-4" />
-                      Follow on GitHub
-                    </Button>
-                  </a>
-                  <a
-                    href="https://github.com/NotHarshhaa/pipeline-forge"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto"
-                  >
-                    <Button variant="outline" className="gap-2 w-full sm:w-auto text-xs sm:text-sm">
-                      <IconStar className="h-4 w-4" />
-                      Star this Project
-                    </Button>
-                  </a>
-                </div>
+
+        <div className="grid items-center gap-10 lg:grid-cols-[280px_1fr] lg:gap-14">
+          {/* Profile */}
+          <div className="mx-auto w-full max-w-xs lg:mx-0">
+            <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/90 p-6 text-center shadow-lg backdrop-blur-sm">
+              <div className="relative mx-auto w-fit">
+                <div
+                  className="absolute -inset-2 rounded-full bg-gradient-to-br from-primary/30 to-primary/5 blur-md"
+                  aria-hidden
+                />
+                <img
+                  src="https://github.com/NotHarshhaa.png"
+                  alt="Harshhaa"
+                  width={128}
+                  height={128}
+                  className="relative h-28 w-28 rounded-2xl border-2 border-border object-cover shadow-md sm:h-32 sm:w-32"
+                />
               </div>
-            </CardContent>
-          </Card>
+
+              <h3 className="mt-5 text-xl font-bold tracking-wide">Harshhaa</h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                @NotHarshhaa
+              </p>
+
+              <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+                {highlights.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-border/60 bg-muted/50 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bio + actions */}
+          <div className="text-center lg:text-left">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Built by an engineer who
+              <span className="text-primary"> lives in pipelines</span>
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base lg:mx-0">
+              Pipeline Forge started as a tool to stop rewriting the same CI/CD
+              YAML — then grew into a full studio for teams shipping on GitHub,
+              GitLab, Jenkins, and beyond.
+            </p>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground lg:mx-0">
+              Development Platform & Automation enthusiast · Cloud, DevOps & MLOps
+              · Platform Engineering
+            </p>
+
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
+              <Button className="w-full gap-2 font-semibold sm:w-auto" asChild>
+                <a
+                  href="https://github.com/NotHarshhaa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <IconBrandGithub className="h-4 w-4" />
+                  Follow on GitHub
+                </a>
+              </Button>
+              <Button variant="outline" className="w-full gap-2 sm:w-auto" asChild>
+                <a
+                  href="https://github.com/NotHarshhaa/pipeline-forge"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <IconStar className="h-4 w-4" />
+                  Star Pipeline Forge
+                </a>
+              </Button>
+            </div>
+
+            <Link
+              href="https://github.com/NotHarshhaa/pipeline-forge"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+            >
+              <IconGitBranch className="h-4 w-4" />
+              Contribute or report issues on GitHub
+            </Link>
+          </div>
         </div>
       </div>
     </section>

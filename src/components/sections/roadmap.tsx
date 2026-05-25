@@ -1,60 +1,123 @@
-import { IconCircleCheck, IconCircleDashed } from "@tabler/icons-react";
+import { IconCircleCheck, IconCircleDashed, IconMap } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-const roadmap = [
-  { label: "GitLab CI support", done: true },
-  { label: "Jenkins pipeline generation", done: true },
-  { label: "CircleCI support", done: true },
-  { label: "Azure Pipelines support", done: true },
-  { label: "Configuration persistence (save/load)", done: true },
-  { label: "YAML syntax highlighting", done: true },
-  { label: "Quick presets for common configurations", done: true },
-  { label: "Configuration export/import (JSON)", done: true },
-  { label: "Undo/redo functionality", done: true },
-  { label: "Best practices analyzer", done: true },
-  { label: "Cost estimation per pipeline", done: true },
-  { label: "Travis CI support", done: false },
-  { label: "Bitbucket Pipelines support", done: false },
-  { label: "Kubernetes deployment templates (advanced)", done: false },
-  { label: "AI-powered pipeline optimization", done: false },
-  { label: "Pipeline visualization (graph view)", done: false },
+const completed = [
+  "GitLab CI support",
+  "Jenkins pipeline generation",
+  "CircleCI support",
+  "Azure Pipelines support",
+  "Configuration persistence (save/load)",
+  "YAML syntax highlighting",
+  "Quick presets for common configurations",
+  "Configuration export/import (JSON)",
+  "Undo/redo functionality",
+  "Best practices analyzer",
+  "Cost estimation per pipeline",
+];
+
+const planned = [
+  "Travis CI support",
+  "Bitbucket Pipelines support",
+  "Kubernetes deployment templates (advanced)",
+  "AI-powered pipeline optimization",
+  "Pipeline visualization (graph view)",
 ];
 
 export function Roadmap() {
+  const doneCount = completed.length;
+  const totalCount = doneCount + planned.length;
+  const progress = Math.round((doneCount / totalCount) * 100);
+
   return (
-    <section id="roadmap" className="py-6 sm:py-8 md:py-12 lg:py-16 bg-muted/30">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <Badge variant="secondary" className="mb-2 sm:mb-3">Roadmap</Badge>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-            What&apos;s coming next
+    <section id="roadmap" className="section-surface relative py-16 sm:py-20 lg:py-24">
+      <div className="generator-grid-bg opacity-50" aria-hidden />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <Badge
+            variant="secondary"
+            className="mb-4 gap-1.5 border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium"
+          >
+            <IconMap className="h-3.5 w-3.5 text-primary" />
+            Roadmap
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            What we&apos;ve shipped
+            <span className="text-primary"> & what&apos;s next</span>
           </h2>
-          <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-            We&apos;re constantly improving Pipeline Forge.
+          <p className="mt-4 text-sm text-muted-foreground sm:text-base">
+            Pipeline Forge evolves in the open. Track progress and request features
+            on GitHub.
           </p>
         </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {roadmap.map((item) => (
+
+        {/* Progress */}
+        <div className="mx-auto mt-10 max-w-2xl overflow-hidden rounded-2xl border border-border/70 bg-card/80 p-5 backdrop-blur-sm sm:p-6">
+          <div className="flex items-center justify-between gap-4 text-sm">
+            <span className="font-medium">Overall progress</span>
+            <span className="font-mono text-primary">{progress}%</span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
             <div
-              key={item.label}
-              className="flex items-center gap-2.5 sm:gap-3 rounded-lg border bg-card p-3 sm:p-4"
-            >
-              {item.done ? (
-                <IconCircleCheck className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 shrink-0" />
-              ) : (
-                <IconCircleDashed className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground shrink-0" />
-              )}
-              <span className={`text-xs sm:text-sm font-medium flex-1 ${item.done ? "line-through text-muted-foreground" : ""}`}>
-                {item.label}
-              </span>
-              {!item.done && (
-                <Badge variant="outline" className="text-[10px] shrink-0">
-                  Planned
-                </Badge>
-              )}
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {doneCount} of {totalCount} roadmap items completed
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          {/* Shipped */}
+          <div className="overflow-hidden rounded-2xl border border-emerald-500/20 bg-card/80 backdrop-blur-sm">
+            <div className="flex items-center gap-2 border-b border-emerald-500/10 bg-emerald-500/5 px-5 py-4">
+              <IconCircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="font-semibold">Shipped</h3>
+              <Badge
+                variant="secondary"
+                className="ml-auto border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-700 dark:text-emerald-400"
+              >
+                {doneCount} items
+              </Badge>
             </div>
-          ))}
+            <ul className="divide-y divide-border/50 p-2">
+              {completed.map((label) => (
+                <li
+                  key={label}
+                  className="flex items-start gap-3 rounded-lg px-3 py-2.5 text-sm"
+                >
+                  <IconCircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-muted-foreground">{label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Planned */}
+          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/80 backdrop-blur-sm">
+            <div className="flex items-center gap-2 border-b border-border/50 bg-muted/30 px-5 py-4">
+              <IconCircleDashed className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-semibold">Planned</h3>
+              <Badge variant="outline" className="ml-auto text-[10px]">
+                {planned.length} items
+              </Badge>
+            </div>
+            <ul className="divide-y divide-border/50 p-2">
+              {planned.map((label) => (
+                <li
+                  key={label}
+                  className={cn(
+                    "flex items-start gap-3 rounded-lg px-3 py-2.5 text-sm"
+                  )}
+                >
+                  <IconCircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>{label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
