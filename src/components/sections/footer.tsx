@@ -1,110 +1,136 @@
-import { IconBrandGithub, IconHeart, IconGitBranch } from "@tabler/icons-react";
-import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
+import {
+  IconBrandGithub,
+  IconHeart,
+  IconGitBranch,
+  IconBolt,
+  IconBook2,
+} from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+const productLinks = [
+  { href: "/#features", label: "Features" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#generator", label: "Pipeline Studio" },
+  { href: "/#roadmap", label: "Roadmap" },
+];
+
+const resourceLinks = [
+  { href: "/instructions", label: "Documentation" },
+  { href: "https://github.com/NotHarshhaa/pipeline-forge", label: "GitHub", external: true },
+  { href: "/#creator", label: "Creator" },
+];
 
 export function Footer() {
-  const quickLinks = [
-    { href: "#features", label: "Features" },
-    { href: "#how-it-works", label: "How It Works" },
-    { href: "#generator", label: "Generator" },
-    { href: "#roadmap", label: "Roadmap" },
-  ];
-
-  const resources = [
-    { href: "https://github.com/NotHarshhaa/pipeline-forge", label: "GitHub" },
-    { href: "#creator", label: "About" },
-  ];
-
   return (
-    <footer className="border-t bg-muted/30">
-      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-4">
-          {/* Brand Section */}
-          <div className="col-span-1 sm:col-span-2 md:col-span-1 lg:col-span-2">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <IconGitBranch className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+    <footer className="relative border-t border-border/60 bg-muted/20">
+      <div className="generator-grid-bg opacity-30" aria-hidden />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
+        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-12">
+          {/* Brand */}
+          <div className="space-y-4">
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                <IconGitBranch className="h-4 w-4" />
               </div>
-              <span className="font-bold text-sm sm:text-base">Pipeline Forge</span>
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Generate production-ready CI/CD pipelines for modern applications
+              <span className="text-lg font-bold tracking-tight">Pipeline Forge</span>
+            </Link>
+            <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
+              Generate production-ready CI/CD pipelines for modern stacks — with
+              security, deploy targets, and best-practice hints built in.
             </p>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className="text-[10px] font-medium">
+                Open source
+              </Badge>
+              <Badge variant="outline" className="text-[10px] font-medium">
+                MIT License
+              </Badge>
+            </div>
+            <Button size="sm" className="gap-2 font-semibold" asChild>
+              <Link href="/#generator">
+                <IconBolt className="h-4 w-4" />
+                Open Pipeline Studio
+              </Link>
+            </Button>
           </div>
 
-          {/* Quick Links */}
-          <div className="hidden md:block">
-            <h3 className="font-semibold text-sm mb-2">Quick Links</h3>
-            <ul className="space-y-1">
-              {quickLinks.map((link) => (
+          {/* Product */}
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Product
+            </h3>
+            <ul className="mt-4 space-y-2.5">
+              {productLinks.map((link) => (
                 <li key={link.href}>
-                  <a
+                  <Link
                     href={link.href}
-                    className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Resources */}
-          <div className="hidden md:block">
-            <h3 className="font-semibold text-sm mb-2">Resources</h3>
-            <ul className="space-y-1">
-              {resources.map((link) => (
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Resources
+            </h3>
+            <ul className="mt-4 space-y-2.5">
+              {resourceLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target={link.href.startsWith('http') ? '_blank' : undefined}
-                    rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </a>
+                  {"external" in link && link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <IconBrandGithub className="h-3.5 w-3.5" />
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label === "Documentation" && (
+                        <IconBook2 className="h-3.5 w-3.5" />
+                      )}
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        <Separator className="my-3 sm:my-4" />
-
-        {/* Bottom Bar - Compact Mobile */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
-          {/* Left - Tagline */}
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            Built with <IconHeart className="h-3 w-3 text-primary" /> for
-            <span className="hidden sm:inline"> developers</span>
+        <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 sm:flex-row">
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            Built with
+            <IconHeart className="h-3.5 w-3.5 text-primary" aria-hidden />
+            for developers
           </p>
 
-          {/* Center - Mobile Quick Links */}
-          <div className="flex items-center gap-3 sm:hidden text-xs text-muted-foreground">
-            {quickLinks.slice(0, 2).map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="hover:text-foreground transition-colors"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Pipeline Forge
+          </p>
 
-          {/* Right - License & GitHub */}
-          <div className="flex items-center gap-3 sm:gap-4 text-xs text-muted-foreground">
-            <span className="hidden sm:inline">MIT License</span>
-            <a
-              href="https://github.com/NotHarshhaa/pipeline-forge"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors flex items-center gap-1"
-            >
-              <IconBrandGithub className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">GitHub</span>
-            </a>
-          </div>
+          <a
+            href="https://github.com/NotHarshhaa/pipeline-forge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-card/50 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
+          >
+            <IconBrandGithub className="h-4 w-4" />
+            Star on GitHub
+          </a>
         </div>
       </div>
     </footer>
