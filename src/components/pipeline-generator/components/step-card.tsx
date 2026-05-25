@@ -13,6 +13,7 @@ import {
   IconChevronDown,
   IconChevronUp,
 } from "@tabler/icons-react";
+import { cn } from "@/lib/utils";
 
 interface StepCardProps {
   stepIndex: number;
@@ -45,63 +46,67 @@ export function StepCard({
 
   return (
     <Card
-      className={
-        isExpanded
-          ? isCompleted
-            ? "border-emerald-500/50 dark:border-emerald-500/70"
-            : "border-primary"
-          : ""
-      }
+      className={cn(
+        "overflow-hidden border-border/60 bg-card/80 shadow-sm transition-all duration-200",
+        isExpanded && isCurrent && "border-primary/40 ring-1 ring-primary/15 shadow-md",
+        isExpanded && isCompleted && "border-emerald-500/30",
+        !isExpanded && "hover:border-border hover:shadow"
+      )}
     >
-      <CardHeader className="pb-2 sm:pb-4">
+      <CardHeader className="p-0">
         <button
+          type="button"
           onClick={onToggle}
-          className="flex items-center justify-between w-full text-left group"
+          className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/30 sm:px-5 sm:py-4"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div
-              className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-all ${
-                isCurrent
-                  ? "bg-primary text-primary-foreground"
-                  : isCompleted
-                    ? "bg-emerald-600 text-white dark:bg-emerald-500"
-                    : "bg-muted text-muted-foreground"
-              }`}
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-semibold transition-all sm:h-10 sm:w-10",
+                isCurrent && "bg-primary text-primary-foreground shadow-sm",
+                isCompleted && !isCurrent && "bg-emerald-600 text-white dark:bg-emerald-500",
+                !isCurrent && !isCompleted && "bg-muted text-muted-foreground"
+              )}
             >
               {isCompleted ? (
                 <IconCheck className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <span className="text-sm font-semibold">{stepNumber}</span>
+                stepNumber
               )}
             </div>
-            <div>
-              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <div className="min-w-0">
+              <CardTitle className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
                 {title}
                 {optional && (
-                  <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                  <Badge variant="secondary" className="text-[10px] font-normal">
                     Optional
                   </Badge>
                 )}
                 {isCompleted && !optional && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    Completed
+                  <Badge
+                    variant="secondary"
+                    className="border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-700 dark:text-emerald-400"
+                  >
+                    Done
                   </Badge>
                 )}
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm mt-1">
+              <CardDescription className="mt-0.5 text-xs line-clamp-1">
                 {description}
               </CardDescription>
             </div>
           </div>
           {isExpanded ? (
-            <IconChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <IconChevronUp className="h-5 w-5 shrink-0 text-muted-foreground" />
           ) : (
-            <IconChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+            <IconChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" />
           )}
         </button>
       </CardHeader>
       {isExpanded && (
-        <CardContent className={contentClassName}>{children}</CardContent>
+        <CardContent className={cn("border-t bg-muted/10 px-4 pb-4 pt-4 sm:px-5 sm:pb-5", contentClassName)}>
+          {children}
+        </CardContent>
       )}
     </Card>
   );
