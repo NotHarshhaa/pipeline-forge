@@ -13,9 +13,9 @@ export function GeneratorStepper({ currentStep, onGoToStep }: GeneratorStepperPr
   return (
     <nav
       aria-label="Pipeline configuration steps"
-      className="shrink-0 border-b bg-muted/30"
+      className="min-w-0 shrink-0 border-b bg-muted/30"
     >
-      <div className="overflow-x-auto overscroll-x-contain scrollbar-hide">
+      <div className="stepper-scrollbar overflow-x-auto overscroll-x-contain pb-1">
         <ol className="flex min-w-max items-center gap-0.5 px-3 py-3 sm:gap-1 sm:px-4 sm:py-3.5 lg:px-5">
           {steps.map((step, index) => {
             const Icon = step.icon;

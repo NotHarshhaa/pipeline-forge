@@ -327,3 +327,35 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Horizontal scrollbar for generator stepper */
+.stepper-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.711 0.019 323.02) oklch(0.96 0.003 325.6);
+}
+
+.stepper-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.stepper-scrollbar::-webkit-scrollbar-track {
+  background: oklch(0.96 0.003 325.6);
+  border-radius: 9999px;
+}
+
+.stepper-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.711 0.019 323.02);
+  border-radius: 9999px;
+}
+
+.dark .stepper-scrollbar {
+  scrollbar-color: oklch(0.435 0.029 321.78) oklch(0.263 0.024 320.12);
+}
+
+.dark .stepper-scrollbar::-webkit-scrollbar-track {
+  background: oklch(0.263 0.024 320.12);
+}
+
+.dark .stepper-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.435 0.029 321.78);
+}
